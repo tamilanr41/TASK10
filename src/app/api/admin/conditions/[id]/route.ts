@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import db, { ConditionRow } from "@/lib/db";
+import { getConditionById, updateConditionById, deleteConditionById, ConditionRow } from "@/lib/db";
 import { json, jsonError, requireAdmin, isError, readJson } from "@/lib/http";
 
 type Ctx = { params: { id: string } };
@@ -19,37 +19,27 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
   const admin = await requireAdmin();
   if (isError(admin)) return admin;
 
-  const cond = db.prepare("SELECT * FROM conditions WHERE id = ?").get(ctx.params.id) as
-    | ConditionRow
-    | undefined;
+  const cond = await getConditionById(Number(ctx.params.id));
   if (!cond) return jsonError("Condition not found.", 404);
 
   const data = await readJson(req);
-  const sets: string[] = [];
-  const vals: unknown[] = [];
+  const fields: Record<string, unknown> = {};
   for (const f of ["name", "category", "description", "severity_guidance", "general_recommendations"]) {
-    if (f in data && data[f] !== null) {
-      sets.push(`${f} = ?`);
-      vals.push(String(data[f]));
-    }
+    if (f in data && data[f] !== null) fields[f] = String(data[f]);
   }
-  if (sets.length) {
-    db.prepare(`UPDATE conditions SET ${sets.join(", ")} WHERE id = ?`).run(...vals, ctx.params.id);
-  }
+  if (Object.keys(fields).length) await updateConditionById(Number(ctx.params.id), fields);
 
-  const updated = db.prepare("SELECT * FROM conditions WHERE id = ?").get(ctx.params.id) as ConditionRow;
-  return json({ message: "Condition updated.", condition: toDict(updated) });
+  const updated = await getConditionById(Number(ctx.params.id));
+  return json({ message: "Condition updated.", condition: updated ? toDict(updated) : null });
 }
 
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const admin = await requireAdmin();
   if (isError(admin)) return admin;
 
-  const cond = db.prepare("SELECT * FROM conditions WHERE id = ?").get(ctx.params.id) as
-    | ConditionRow
-    | undefined;
+  const cond = await getConditionById(Number(ctx.params.id));
   if (!cond) return jsonError("Condition not found.", 404);
 
-  db.prepare("DELETE FROM conditions WHERE id = ?").run(ctx.params.id);
+  await deleteConditionById(Number(ctx.params.id));
   return json({ message: "Condition deleted." });
 }

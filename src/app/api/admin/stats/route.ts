@@ -1,40 +1,34 @@
-import db, { screeningToDict, ScreeningRow } from "@/lib/db";
+import {
+  countUsers,
+  countScreenings,
+  countScreeningsInTypes,
+  allScreeningsSeverityValues,
+  allScreeningsConditionValues,
+  listRecentScreenings,
+  screeningToDict,
+} from "@/lib/db";
 import { json, requireAdmin, isError } from "@/lib/http";
 
 export async function GET() {
   const admin = await requireAdmin();
   if (isError(admin)) return admin;
 
-  const users = (db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number }).n;
-  const screenings = (db.prepare("SELECT COUNT(*) AS n FROM screenings").get() as { n: number }).n;
-  const scalp = (
-    db
-      .prepare("SELECT COUNT(*) AS n FROM screenings WHERE screening_type IN ('scalp','combined')")
-      .get() as { n: number }
-  ).n;
-  const nails = (
-    db
-      .prepare("SELECT COUNT(*) AS n FROM screenings WHERE screening_type IN ('nails','combined')")
-      .get() as { n: number }
-  ).n;
-  const combined = (
-    db.prepare("SELECT COUNT(*) AS n FROM screenings WHERE screening_type = 'combined'").get() as {
-      n: number;
-    }
-  ).n;
+  const [users, screenings, scalp, nails, combined] = await Promise.all([
+    countUsers(),
+    countScreenings(),
+    countScreeningsInTypes(["scalp", "combined"]),
+    countScreeningsInTypes(["nails", "combined"]),
+    countScreeningsInTypes(["combined"]),
+  ]);
 
   const severityDist: Record<string, number> = {};
-  for (const row of db.prepare("SELECT overall_severity FROM screenings").all() as Array<{
-    overall_severity: string | null;
-  }>) {
+  for (const row of await allScreeningsSeverityValues()) {
     const k = row.overall_severity || "unknown";
     severityDist[k] = (severityDist[k] || 0) + 1;
   }
 
   const mostCommon: Record<string, number> = {};
-  for (const row of db.prepare("SELECT overall_condition FROM screenings").all() as Array<{
-    overall_condition: string | null;
-  }>) {
+  for (const row of await allScreeningsConditionValues()) {
     const k = row.overall_condition || "unknown";
     mostCommon[k] = (mostCommon[k] || 0) + 1;
   }
@@ -43,9 +37,7 @@ export async function GET() {
     .slice(0, 8)
     .map(([condition, count]) => ({ condition, count }));
 
-  const recentRows = db
-    .prepare("SELECT * FROM screenings ORDER BY created_at DESC LIMIT 10")
-    .all() as ScreeningRow[];
+  const recentRows = await listRecentScreenings(10);
 
   return json({
     total_users: users,

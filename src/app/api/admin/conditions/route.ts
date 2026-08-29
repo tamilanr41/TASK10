@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import db, { ConditionRow } from "@/lib/db";
+import { listConditions, insertCondition, ConditionRow } from "@/lib/db";
 import { json, jsonError, requireAdmin, isError, readJson } from "@/lib/http";
 
 function toDict(c: ConditionRow): Record<string, unknown> {
@@ -16,7 +16,7 @@ function toDict(c: ConditionRow): Record<string, unknown> {
 export async function GET() {
   const admin = await requireAdmin();
   if (isError(admin)) return admin;
-  const rows = db.prepare("SELECT * FROM conditions ORDER BY created_at ASC").all() as ConditionRow[];
+  const rows = await listConditions();
   return json({ conditions: rows.map(toDict) });
 }
 
@@ -28,19 +28,12 @@ export async function POST(req: NextRequest) {
   const name = String(data.name || "").trim();
   if (!name) return jsonError("Condition name is required.", 400);
 
-  const info = db
-    .prepare(
-      `INSERT INTO conditions (name, category, description, severity_guidance, general_recommendations)
-       VALUES (?, ?, ?, ?, ?)`
-    )
-    .run(
-      name,
-      String(data.category || "general").trim(),
-      String(data.description || "").trim(),
-      String(data.severity_guidance || "").trim(),
-      String(data.general_recommendations || "").trim()
-    );
-
-  const row = db.prepare("SELECT * FROM conditions WHERE id = ?").get(info.lastInsertRowid) as ConditionRow;
+  const row = await insertCondition({
+    name,
+    category: String(data.category || "general").trim(),
+    description: String(data.description || "").trim(),
+    severity_guidance: String(data.severity_guidance || "").trim(),
+    general_recommendations: String(data.general_recommendations || "").trim(),
+  });
   return json({ message: "Condition added.", condition: toDict(row) }, 201);
 }

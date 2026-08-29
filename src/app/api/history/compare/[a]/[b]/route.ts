@@ -1,4 +1,4 @@
-import db, { ScreeningRow, UserRow } from "@/lib/db";
+import { getUserById, getScreeningById, ScreeningRow } from "@/lib/db";
 import { json, jsonError, requireAuth, isError } from "@/lib/http";
 
 type Ctx = { params: { a: string; b: string } };
@@ -7,16 +7,10 @@ export async function GET(_req: Request, ctx: Ctx) {
   const session = await requireAuth();
   if (isError(session)) return session;
 
-  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(session.userId) as
-    | UserRow
-    | undefined;
+  const user = await getUserById(session.userId);
 
-  const sa = db.prepare("SELECT * FROM screenings WHERE id = ?").get(ctx.params.a) as
-    | ScreeningRow
-    | undefined;
-  const sb = db.prepare("SELECT * FROM screenings WHERE id = ?").get(ctx.params.b) as
-    | ScreeningRow
-    | undefined;
+  const sa = await getScreeningById(Number(ctx.params.a));
+  const sb = await getScreeningById(Number(ctx.params.b));
 
   for (const s of [sa, sb]) {
     if (!s) return jsonError("One of the screenings was not found.", 404);

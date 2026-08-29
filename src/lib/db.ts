@@ -1,7 +1,9 @@
-import Database from "better-sqlite3";
+import { MongoClient, Db, Filter, Document } from "mongodb";
 import bcrypt from "bcryptjs";
-import fs from "node:fs";
 import path from "node:path";
+
+let client: MongoClient | null = null;
+let dbi: Db | null = null;
 
 export const DATA_DIR = process.env.DATA_DIR
   ? path.resolve(process.env.DATA_DIR)
@@ -11,113 +13,56 @@ export const SCALP_DIR = path.join(UPLOAD_DIR, "scalp");
 export const NAIL_DIR = path.join(UPLOAD_DIR, "nails");
 export const REPORT_DIR = path.join(UPLOAD_DIR, "reports");
 
-for (const dir of [DATA_DIR, UPLOAD_DIR, SCALP_DIR, NAIL_DIR, REPORT_DIR]) {
-  fs.mkdirSync(dir, { recursive: true });
+function requireDb(): Db {
+  if (!dbi) throw new Error("Database is not connected. Call connectDb() first.");
+  return dbi;
 }
 
-const db = new Database(path.join(DATA_DIR, "dermai.db"));
-db.pragma("journal_mode = WAL");
+export function isDbConnected(): boolean {
+  return !!dbi;
+}
 
-db.exec(`
-CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  age INTEGER,
-  sex TEXT,
-  role TEXT NOT NULL DEFAULT 'user',
-  is_active INTEGER NOT NULL DEFAULT 1,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE TABLE IF NOT EXISTS screenings (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL REFERENCES users(id),
-  screening_type TEXT NOT NULL,
-  mode TEXT NOT NULL DEFAULT 'demo',
-  model_version TEXT NOT NULL DEFAULT 'demo-1.0',
-  scalp_image_path TEXT,
-  nail_image_path TEXT,
-  symptoms TEXT,
-  diet_info TEXT,
-  predictions TEXT,
-  overall_condition TEXT,
-  overall_confidence REAL,
-  overall_severity TEXT,
-  summary_text TEXT,
-  nutrition_insights TEXT,
-  hydration_insight TEXT,
-  recommendations TEXT,
-  doctor_recommendation TEXT,
-  report_path TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE INDEX IF NOT EXISTS idx_screenings_user ON screenings(user_id);
-CREATE TABLE IF NOT EXISTS doctors (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  specialization TEXT NOT NULL DEFAULT 'Dermatology',
-  clinic TEXT,
-  location TEXT,
-  contact TEXT,
-  availability TEXT,
-  consultation_info TEXT,
-  city TEXT,
-  is_sample INTEGER NOT NULL DEFAULT 1,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE TABLE IF NOT EXISTS conditions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  category TEXT NOT NULL,
-  description TEXT,
-  severity_guidance TEXT,
-  general_recommendations TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE TABLE IF NOT EXISTS nutrition (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nutrient TEXT NOT NULL,
-  insight TEXT,
-  food_suggestions TEXT,
-  caution_text TEXT,
-  is_active INTEGER NOT NULL DEFAULT 1,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE TABLE IF NOT EXISTS recommendations (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  category TEXT NOT NULL,
-  description TEXT,
-  severity TEXT,
-  is_active INTEGER NOT NULL DEFAULT 1,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE TABLE IF NOT EXISTS reminders (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL REFERENCES users(id),
-  title TEXT NOT NULL,
-  description TEXT,
-  reminder_date TEXT,
-  reminder_time TEXT,
-  repeat_frequency TEXT NOT NULL DEFAULT 'none',
-  is_enabled INTEGER NOT NULL DEFAULT 1,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE INDEX IF NOT EXISTS idx_reminders_user ON reminders(user_id);
-CREATE TABLE IF NOT EXISTS chat_messages (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL REFERENCES users(id),
-  role TEXT NOT NULL,
-  content TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE INDEX IF NOT EXISTS idx_chat_user ON chat_messages(user_id);
-CREATE TABLE IF NOT EXISTS app_meta (
-  key TEXT PRIMARY KEY,
-  value TEXT
-);
-`);
+export async function connectDb(): Promise<void> {
+  if (dbi) return;
+  const uri = process.env.MONGO_URI;
+  if (!uri) {
+    throw new Error("MONGO_URI environment variable is not set.");
+  }
+  client = new MongoClient(uri, { serverSelectionTimeoutMS: 20000 });
+  await client.connect();
+  const dbName = process.env.MONGO_DB || "dermai";
+  dbi = client.db(dbName);
+
+  const colls = ["users", "screenings", "doctors", "conditions", "nutrition", "recommendations", "reminders", "chat_messages"];
+  for (const c of colls) {
+    await dbi.collection(c).createIndex({ id: 1 }, { unique: true });
+  }
+  await dbi.collection("users").createIndex({ email: 1 }, { unique: true });
+  await dbi.collection("screenings").createIndex({ user_id: 1 });
+  await dbi.collection("reminders").createIndex({ user_id: 1 });
+  await dbi.collection("chat_messages").createIndex({ user_id: 1 });
+}
+
+export async function disconnectDb(): Promise<void> {
+  if (client) {
+    await client.close();
+    client = null;
+    dbi = null;
+  }
+}
+
+async function nextIdFor(collection: string): Promise<number> {
+  const res = await requireDb()
+    .collection<any>("counters")
+    .findOneAndUpdate({ _id: collection }, { $inc: { seq: 1 } }, { upsert: true, returnDocument: "after" });
+  return res?.seq ?? 1;
+}
+
+function toRow<T>(doc: Document | null | undefined): T | undefined {
+  if (!doc) return undefined;
+  const { _id: _ignored, ...rest } = doc;
+  return rest as T;
+}
 
 export function loadJson<T = unknown>(value: unknown): T | null {
   if (!value) return null;
@@ -127,6 +72,8 @@ export function loadJson<T = unknown>(value: unknown): T | null {
     return null;
   }
 }
+
+// ---------------------------------------------------------------- types
 
 export type UserRow = {
   id: number;
@@ -139,26 +86,6 @@ export type UserRow = {
   is_active: number;
   created_at: string;
 };
-
-export function userToDict(u: UserRow, privateInfo = false): Record<string, unknown> {
-  const out: Record<string, unknown> = {
-    id: u.id,
-    name: u.name,
-    email: u.email,
-    age: u.age,
-    sex: u.sex,
-    role: u.role,
-    is_active: !!u.is_active,
-    created_at: u.created_at,
-  };
-  if (privateInfo) {
-    const row = db
-      .prepare("SELECT COUNT(*) AS n FROM screenings WHERE user_id = ?")
-      .get(u.id) as { n: number };
-    out["screening_count"] = row.n;
-  }
-  return out;
-}
 
 export type ScreeningRow = {
   id: number;
@@ -183,31 +110,6 @@ export type ScreeningRow = {
   created_at: string;
 };
 
-export function screeningToDict(s: ScreeningRow): Record<string, unknown> {
-  return {
-    id: s.id,
-    user_id: s.user_id,
-    screening_type: s.screening_type,
-    mode: s.mode,
-    model_version: s.model_version,
-    scalp_image_path: s.scalp_image_path,
-    nail_image_path: s.nail_image_path,
-    symptoms: loadJson(s.symptoms),
-    diet_info: loadJson(s.diet_info),
-    predictions: loadJson(s.predictions),
-    overall_condition: s.overall_condition,
-    overall_confidence: s.overall_confidence,
-    overall_severity: s.overall_severity,
-    summary_text: s.summary_text,
-    nutrition_insights: loadJson(s.nutrition_insights),
-    hydration_insight: s.hydration_insight,
-    recommendations: loadJson(s.recommendations),
-    doctor_recommendation: loadJson(s.doctor_recommendation),
-    report_path: s.report_path,
-    created_at: s.created_at,
-  };
-}
-
 export type DoctorRow = {
   id: number;
   name: string;
@@ -221,21 +123,6 @@ export type DoctorRow = {
   is_sample: number;
   created_at: string;
 };
-
-export function doctorToDict(d: DoctorRow): Record<string, unknown> {
-  return {
-    id: d.id,
-    name: d.name,
-    specialization: d.specialization,
-    clinic: d.clinic,
-    location: d.location,
-    contact: d.contact,
-    availability: d.availability,
-    consultation_info: d.consultation_info,
-    city: d.city,
-    is_sample: !!d.is_sample,
-  };
-}
 
 export type ConditionRow = {
   id: number;
@@ -276,6 +163,73 @@ export type ReminderRow = {
   created_at: string;
 };
 
+export type ChatRow = {
+  id: number;
+  user_id: number;
+  role: string;
+  content: string;
+  created_at: string;
+};
+
+// ---------------------------------------------------------------- dicts
+
+export async function userToDict(u: UserRow, privateInfo = false): Promise<Record<string, unknown>> {
+  const out: Record<string, unknown> = {
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    age: u.age,
+    sex: u.sex,
+    role: u.role,
+    is_active: !!u.is_active,
+    created_at: u.created_at,
+  };
+  if (privateInfo) {
+    out["screening_count"] = await countUserScreenings(u.id);
+  }
+  return out;
+}
+
+export function screeningToDict(s: ScreeningRow): Record<string, unknown> {
+  return {
+    id: s.id,
+    user_id: s.user_id,
+    screening_type: s.screening_type,
+    mode: s.mode,
+    model_version: s.model_version,
+    scalp_image_path: s.scalp_image_path,
+    nail_image_path: s.nail_image_path,
+    symptoms: loadJson(s.symptoms),
+    diet_info: loadJson(s.diet_info),
+    predictions: loadJson(s.predictions),
+    overall_condition: s.overall_condition,
+    overall_confidence: s.overall_confidence,
+    overall_severity: s.overall_severity,
+    summary_text: s.summary_text,
+    nutrition_insights: loadJson(s.nutrition_insights),
+    hydration_insight: s.hydration_insight,
+    recommendations: loadJson(s.recommendations),
+    doctor_recommendation: loadJson(s.doctor_recommendation),
+    report_path: s.report_path,
+    created_at: s.created_at,
+  };
+}
+
+export function doctorToDict(d: DoctorRow): Record<string, unknown> {
+  return {
+    id: d.id,
+    name: d.name,
+    specialization: d.specialization,
+    clinic: d.clinic,
+    location: d.location,
+    contact: d.contact,
+    availability: d.availability,
+    consultation_info: d.consultation_info,
+    city: d.city,
+    is_sample: !!d.is_sample,
+  };
+}
+
 export function reminderToDict(r: ReminderRow): Record<string, unknown> {
   return {
     id: r.id,
@@ -290,56 +244,367 @@ export function reminderToDict(r: ReminderRow): Record<string, unknown> {
   };
 }
 
-export type ChatRow = {
-  id: number;
-  user_id: number;
-  role: string;
-  content: string;
-  created_at: string;
-};
-
 export function chatToDict(c: ChatRow): Record<string, unknown> {
   return { id: c.id, user_id: c.user_id, role: c.role, content: c.content, created_at: c.created_at };
 }
 
-export function seedIfEmpty(): void {
-  const seededMarker = db
-    .prepare("INSERT OR IGNORE INTO app_meta (key, value) VALUES ('seeded', '1')")
-    .run();
-  if (seededMarker.changes === 0) return;
+// ---------------------------------------------------------------- users
 
-  const userCount = (db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number }).n;
-  if (userCount === 0) {
-    const adminHash = bcrypt.hashSync("Admin@1234", 10);
-    const demoHash = bcrypt.hashSync("Demo@1234", 10);
-    db.prepare(
-      "INSERT INTO users (name, email, password_hash, age, sex, role) VALUES (?, ?, ?, ?, ?, ?)"
-    ).run("DermAI Administrator", "admin@dermai.app", adminHash, 35, "Prefer not to say", "admin");
-    db.prepare(
-      "INSERT INTO users (name, email, password_hash, age, sex, role) VALUES (?, ?, ?, ?, ?, ?)"
-    ).run("Demo User", "demo@dermai.app", demoHash, 24, "Prefer not to say", "user");
+export async function getUserByEmail(email: string): Promise<UserRow | undefined> {
+  return toRow<UserRow>(await requireDb().collection("users").findOne({ email }));
+}
+
+export async function getUserById(id: number): Promise<UserRow | undefined> {
+  return toRow<UserRow>(await requireDb().collection("users").findOne({ id }));
+}
+
+export async function listUsers(search?: string): Promise<UserRow[]> {
+  const query = search
+    ? {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ],
+      }
+    : {};
+  const docs = await requireDb()
+    .collection("users")
+    .find(query as Filter<Document>)
+    .sort({ created_at: -1 })
+    .limit(200)
+    .toArray();
+  return docs.map((d) => toRow<UserRow>(d) as UserRow);
+}
+
+export async function insertUser(data: {
+  name: string;
+  email: string;
+  password_hash: string;
+  age: number | null;
+  sex: string | null;
+  role: string;
+}): Promise<UserRow> {
+  const id = await nextIdFor("users");
+  const doc = { id, is_active: 1, created_at: new Date().toISOString(), ...data };
+  await requireDb().collection("users").insertOne(doc);
+  return toRow<UserRow>(doc) as UserRow;
+}
+
+export async function updateUserActive(id: number, active: boolean): Promise<void> {
+  await requireDb().collection("users").updateOne({ id }, { $set: { is_active: active ? 1 : 0 } });
+}
+
+export async function countUsers(): Promise<number> {
+  return await requireDb().collection("users").countDocuments({});
+}
+
+export async function countUserScreenings(userId: number): Promise<number> {
+  return await requireDb().collection("screenings").countDocuments({ user_id: userId });
+}
+
+// ---------------------------------------------------------------- screenings
+
+export async function listScreeningsByUser(userId: number): Promise<ScreeningRow[]> {
+  const docs = await requireDb()
+    .collection("screenings")
+    .find({ user_id: userId })
+    .sort({ created_at: -1 })
+    .toArray();
+  return docs.map((d) => toRow<ScreeningRow>(d) as ScreeningRow);
+}
+
+export async function listRecentScreenings(limit: number): Promise<ScreeningRow[]> {
+  const docs = await requireDb()
+    .collection("screenings")
+    .find({})
+    .sort({ created_at: -1 })
+    .limit(limit)
+    .toArray();
+  return docs.map((d) => toRow<ScreeningRow>(d) as ScreeningRow);
+}
+
+export async function listLatestScreening(userId: number): Promise<ScreeningRow | undefined> {
+  const doc = await requireDb()
+    .collection("screenings")
+    .find({ user_id: userId })
+    .sort({ created_at: -1 })
+    .limit(1)
+    .next();
+  return toRow<ScreeningRow>(doc);
+}
+
+export async function getScreeningById(id: number): Promise<ScreeningRow | undefined> {
+  return toRow<ScreeningRow>(await requireDb().collection("screenings").findOne({ id }));
+}
+
+export async function insertScreening(data: Record<string, unknown>): Promise<ScreeningRow> {
+  const id = await nextIdFor("screenings");
+  const doc = { id, created_at: new Date().toISOString(), ...data };
+  await requireDb().collection("screenings").insertOne(doc);
+  return toRow<ScreeningRow>(doc) as ScreeningRow;
+}
+
+export async function updateScreeningReportPath(id: number, reportPath: string): Promise<void> {
+  await requireDb().collection("screenings").updateOne({ id }, { $set: { report_path: reportPath } });
+}
+
+export async function deleteScreeningById(id: number): Promise<void> {
+  await requireDb().collection("screenings").deleteOne({ id });
+}
+
+export async function countScreenings(): Promise<number> {
+  return await requireDb().collection("screenings").countDocuments({});
+}
+
+export async function countScreeningsInTypes(types: string[]): Promise<number> {
+  return await requireDb()
+    .collection("screenings")
+    .countDocuments({ screening_type: { $in: types } });
+}
+
+export async function allScreeningsSeverityValues(): Promise<Array<{ overall_severity: string | null }>> {
+  const docs = await requireDb()
+    .collection("screenings")
+    .find({}, { projection: { _id: 0, overall_severity: 1 } })
+    .toArray();
+  return docs as unknown as Array<{ overall_severity: string | null }>;
+}
+
+export async function allScreeningsConditionValues(): Promise<Array<{ overall_condition: string | null }>> {
+  const docs = await requireDb()
+    .collection("screenings")
+    .find({}, { projection: { _id: 0, overall_condition: 1 } })
+    .toArray();
+  return docs as unknown as Array<{ overall_condition: string | null }>;
+}
+
+// ---------------------------------------------------------------- doctors
+
+export async function listDoctors(): Promise<DoctorRow[]> {
+  const docs = await requireDb()
+    .collection("doctors")
+    .find({})
+    .sort({ created_at: 1 })
+    .toArray();
+  return docs.map((d) => toRow<DoctorRow>(d) as DoctorRow);
+}
+
+export async function listSampleDoctors(): Promise<DoctorRow[]> {
+  const docs = await requireDb()
+    .collection("doctors")
+    .find({ is_sample: 1 })
+    .toArray();
+  return docs.map((d) => toRow<DoctorRow>(d) as DoctorRow);
+}
+
+export async function getDoctorById(id: number): Promise<DoctorRow | undefined> {
+  return toRow<DoctorRow>(await requireDb().collection("doctors").findOne({ id }));
+}
+
+export async function insertDoctor(data: Record<string, unknown>): Promise<DoctorRow> {
+  const id = await nextIdFor("doctors");
+  const doc = { id, is_sample: 1, created_at: new Date().toISOString(), ...data };
+  await requireDb().collection("doctors").insertOne(doc);
+  return toRow<DoctorRow>(doc) as DoctorRow;
+}
+
+export async function updateDoctorById(id: number, fields: Record<string, unknown>): Promise<void> {
+  await requireDb().collection("doctors").updateOne({ id }, { $set: fields });
+}
+
+export async function deleteDoctorById(id: number): Promise<void> {
+  await requireDb().collection("doctors").deleteOne({ id });
+}
+
+// ---------------------------------------------------------------- conditions
+
+export async function listConditions(): Promise<ConditionRow[]> {
+  const docs = await requireDb()
+    .collection("conditions")
+    .find({})
+    .sort({ created_at: 1 })
+    .toArray();
+  return docs.map((d) => toRow<ConditionRow>(d) as ConditionRow);
+}
+
+export async function getConditionById(id: number): Promise<ConditionRow | undefined> {
+  return toRow<ConditionRow>(await requireDb().collection("conditions").findOne({ id }));
+}
+
+export async function insertCondition(data: Record<string, unknown>): Promise<ConditionRow> {
+  const id = await nextIdFor("conditions");
+  const doc = { id, created_at: new Date().toISOString(), ...data };
+  await requireDb().collection("conditions").insertOne(doc);
+  return toRow<ConditionRow>(doc) as ConditionRow;
+}
+
+export async function updateConditionById(id: number, fields: Record<string, unknown>): Promise<void> {
+  await requireDb().collection("conditions").updateOne({ id }, { $set: fields });
+}
+
+export async function deleteConditionById(id: number): Promise<void> {
+  await requireDb().collection("conditions").deleteOne({ id });
+}
+
+// ---------------------------------------------------------------- nutrition
+
+export async function listNutrition(): Promise<NutritionRow[]> {
+  const docs = await requireDb()
+    .collection("nutrition")
+    .find({})
+    .sort({ created_at: 1 })
+    .toArray();
+  return docs.map((d) => toRow<NutritionRow>(d) as NutritionRow);
+}
+
+export async function getNutritionById(id: number): Promise<NutritionRow | undefined> {
+  return toRow<NutritionRow>(await requireDb().collection("nutrition").findOne({ id }));
+}
+
+export async function insertNutrition(data: Record<string, unknown>): Promise<NutritionRow> {
+  const id = await nextIdFor("nutrition");
+  const doc = { id, is_active: 1, created_at: new Date().toISOString(), ...data };
+  await requireDb().collection("nutrition").insertOne(doc);
+  return toRow<NutritionRow>(doc) as NutritionRow;
+}
+
+export async function updateNutritionById(id: number, fields: Record<string, unknown>): Promise<void> {
+  await requireDb().collection("nutrition").updateOne({ id }, { $set: fields });
+}
+
+export async function deleteNutritionById(id: number): Promise<void> {
+  await requireDb().collection("nutrition").deleteOne({ id });
+}
+
+// ---------------------------------------------------------------- recommendations
+
+export async function listRecommendations(): Promise<RecommendationRow[]> {
+  const docs = await requireDb()
+    .collection("recommendations")
+    .find({})
+    .sort({ created_at: 1 })
+    .toArray();
+  return docs.map((d) => toRow<RecommendationRow>(d) as RecommendationRow);
+}
+
+export async function getRecommendationById(id: number): Promise<RecommendationRow | undefined> {
+  return toRow<RecommendationRow>(await requireDb().collection("recommendations").findOne({ id }));
+}
+
+export async function insertRecommendation(data: Record<string, unknown>): Promise<RecommendationRow> {
+  const id = await nextIdFor("recommendations");
+  const doc = { id, is_active: 1, created_at: new Date().toISOString(), ...data };
+  await requireDb().collection("recommendations").insertOne(doc);
+  return toRow<RecommendationRow>(doc) as RecommendationRow;
+}
+
+export async function updateRecommendationById(id: number, fields: Record<string, unknown>): Promise<void> {
+  await requireDb().collection("recommendations").updateOne({ id }, { $set: fields });
+}
+
+export async function deleteRecommendationById(id: number): Promise<void> {
+  await requireDb().collection("recommendations").deleteOne({ id });
+}
+
+// ---------------------------------------------------------------- reminders
+
+export async function listRemindersByUser(userId: number): Promise<ReminderRow[]> {
+  const docs = await requireDb()
+    .collection("reminders")
+    .find({ user_id: userId })
+    .sort({ created_at: -1 })
+    .toArray();
+  return docs.map((d) => toRow<ReminderRow>(d) as ReminderRow);
+}
+
+export async function getReminderById(id: number): Promise<ReminderRow | undefined> {
+  return toRow<ReminderRow>(await requireDb().collection("reminders").findOne({ id }));
+}
+
+export async function insertReminder(data: Record<string, unknown>): Promise<ReminderRow> {
+  const id = await nextIdFor("reminders");
+  const doc = { id, created_at: new Date().toISOString(), ...data };
+  await requireDb().collection("reminders").insertOne(doc);
+  return toRow<ReminderRow>(doc) as ReminderRow;
+}
+
+export async function updateReminderById(id: number, fields: Record<string, unknown>): Promise<void> {
+  await requireDb().collection("reminders").updateOne({ id }, { $set: fields });
+}
+
+export async function deleteReminderById(id: number): Promise<void> {
+  await requireDb().collection("reminders").deleteOne({ id });
+}
+
+// ---------------------------------------------------------------- chat
+
+export async function listChatByUser(userId: number): Promise<ChatRow[]> {
+  const docs = await requireDb()
+    .collection("chat_messages")
+    .find({ user_id: userId })
+    .sort({ created_at: 1 })
+    .limit(100)
+    .toArray();
+  return docs.map((d) => toRow<ChatRow>(d) as ChatRow);
+}
+
+export async function insertChatMessage(userId: number, role: string, content: string): Promise<void> {
+  const id = await nextIdFor("chat_messages");
+  await requireDb()
+    .collection("chat_messages")
+    .insertOne({ id, user_id: userId, role, content, created_at: new Date().toISOString() });
+}
+
+// ---------------------------------------------------------------- seed
+
+export async function seedIfEmpty(): Promise<void> {
+  const dbc = requireDb();
+  try {
+    await dbc.collection<any>("app_meta").insertOne({ _id: "seeded", value: "1" });
+  } catch {
+    // marker already exists; seeding is driven by existence checks below
   }
 
-  const doctorCount = (db.prepare("SELECT COUNT(*) AS n FROM doctors").get() as { n: number }).n;
-  if (doctorCount === 0) {
-    const insert = db.prepare(
-      `INSERT INTO doctors (name, specialization, clinic, location, contact, availability, consultation_info, city, is_sample)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`
-    );
+  const samples = [
+    { name: "DermAI Administrator", email: "admin@dermai.app", password_hash: bcrypt.hashSync("Admin@1234", 10), age: 35, sex: "Prefer not to say", role: "admin" },
+    { name: "Demo User", email: "demo@dermai.app", password_hash: bcrypt.hashSync("Demo@1234", 10), age: 24, sex: "Prefer not to say", role: "user" },
+  ] as const;
+  for (const s of samples) {
+    if (!(await getUserByEmail(s.email))) {
+      await insertUser({
+        name: s.name,
+        email: s.email,
+        password_hash: s.password_hash,
+        age: s.age,
+        sex: s.sex,
+        role: s.role,
+      });
+    }
+  }
+
+  if ((await dbc.collection("doctors").countDocuments({})) === 0) {
     const doctors = [
       ["Dr. A. Kavitha, MD", "Dermatology", "City Skin & Hair Clinic", "Anna Nagar, Chennai", "+91 90145 09499", "Mon\u2013Sat 10:00\u201318:00", "In-person & video consultation", "Chennai"],
       ["Dr. R. Prakash, MD", "Dermatology & Trichology", "Prakash Dermatology Centre", "T. Nagar, Chennai", "+91 90145 09499", "Mon\u2013Fri 09:00\u201317:00", "Appointment preferred", "Chennai"],
       ["Dr. S. Meenakshi, MD", "Dermatology", "Meenakshi Skin Speciality", "Koramangala, Bengaluru", "+91 90145 09499", "Tue\u2013Sun 11:00\u201319:00", "Walk-ins welcome 11:00\u201314:00", "Bengaluru"],
       ["Dr. V. Ramesh, MD", "Dermatology, Hair & Nail Disorders", "Ramesh Derma Care", "Banjara Hills, Hyderabad", "+91 90145 09499", "Mon\u2013Sat 10:00\u201320:00", "In-person & teleconsult", "Hyderabad"],
     ] as const;
-    for (const d of doctors) insert.run(...d);
+    for (const d of doctors) {
+      await insertDoctor({
+        name: d[0],
+        specialization: d[1],
+        clinic: d[2],
+        location: d[3],
+        contact: d[4],
+        availability: d[5],
+        consultation_info: d[6],
+        city: d[7],
+        is_sample: 1,
+      });
+    }
   }
 
-  const condCount = (db.prepare("SELECT COUNT(*) AS n FROM conditions").get() as { n: number }).n;
-  if (condCount === 0) {
-    const insert = db.prepare(
-      "INSERT INTO conditions (name, category, description, severity_guidance, general_recommendations) VALUES (?, ?, ?, ?, ?)"
-    );
+  if ((await dbc.collection("conditions").countDocuments({})) === 0) {
     const rows = [
       ["Dandruff", "scalp", "Visible flaking and scaling with possible itching.", "Mild: general care. Moderate/high: professional review.", "Mild cleansing routine; monitor."],
       ["Dry scalp", "scalp", "Dry, tight scalp with fine dry flakes.", "Usually mild; monitor hydration and products.", "Gentle moisture and mild products."],
@@ -353,14 +618,18 @@ export function seedIfEmpty(): void {
       ["Possible fungal nail condition", "nails", "Thickening, discoloration, texture change possibly fungal-pattern.", "Moderate/high - professional evaluation recommended.", "Keep nails dry; consult professional."],
       ["Nail separation", "nails", "Nail separates from nail bed.", "Moderate - professional evaluation recommended.", "Protect the nail; consult."],
     ];
-    for (const r of rows) insert.run(...r);
+    for (const r of rows) {
+      await insertCondition({
+        name: r[0],
+        category: r[1],
+        description: r[2],
+        severity_guidance: r[3],
+        general_recommendations: r[4],
+      });
+    }
   }
 
-  const nutrCount = (db.prepare("SELECT COUNT(*) AS n FROM nutrition").get() as { n: number }).n;
-  if (nutrCount === 0) {
-    const insert = db.prepare(
-      "INSERT INTO nutrition (nutrient, insight, food_suggestions, caution_text) VALUES (?, ?, ?, ?)"
-    );
+  if ((await dbc.collection("nutrition").countDocuments({})) === 0) {
     const entries: Array<[string, string, string[], string]> = [
       ["Iron", "Some symptoms can sometimes be associated with nutritional factors such as iron status. Consider discussing testing with a qualified healthcare professional if appropriate.", ["Leafy green vegetables", "Lentils and beans", "Fortified foods"], ""],
       ["Vitamin B12", "Some symptoms can sometimes be associated with nutritional factors such as Vitamin B12 status. Consider discussing testing with a qualified healthcare professional if appropriate.", ["Eggs", "Dairy", "Fortified foods"], ""],
@@ -370,15 +639,17 @@ export function seedIfEmpty(): void {
       ["General balanced nutrition", "A variety of whole foods supports general wellness.", ["Vegetables and fruits", "Whole grains", "Adequate hydration"], ""],
     ];
     for (const [nutrient, insight, foods, caution] of entries) {
-      insert.run(nutrient, insight, JSON.stringify(foods), caution);
+      await insertNutrition({
+        nutrient,
+        insight,
+        food_suggestions: JSON.stringify(foods),
+        caution_text: caution,
+        is_active: 1,
+      });
     }
   }
 
-  const recCount = (db.prepare("SELECT COUNT(*) AS n FROM recommendations").get() as { n: number }).n;
-  if (recCount === 0) {
-    const insert = db.prepare(
-      "INSERT INTO recommendations (title, category, description, severity) VALUES (?, ?, ?, ?)"
-    );
+  if ((await dbc.collection("recommendations").countDocuments({})) === 0) {
     const recs = [
       ["Maintain appropriate scalp hygiene", "precaution", "Keep the scalp clean with a gentle, non-irritating routine.", "all"],
       ["Avoid excessive scratching", "precaution", "Scratching can irritate and worsen flaking or itching.", "all"],
@@ -389,10 +660,14 @@ export function seedIfEmpty(): void {
       ["Monitor whether symptoms are worsening", "consult", "If symptoms worsen, spread or cause pain, consult a professional.", "all"],
       ["Consult a qualified dermatologist", "consult", "Clearly recommended for high-severity findings.", "high"],
     ];
-    for (const r of recs) insert.run(...r);
+    for (const r of recs) {
+      await insertRecommendation({
+        title: r[0],
+        category: r[1],
+        description: r[2],
+        severity: r[3],
+        is_active: 1,
+      });
+    }
   }
 }
-
-seedIfEmpty();
-
-export default db;

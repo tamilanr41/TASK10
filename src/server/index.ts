@@ -4,7 +4,7 @@ import multer from "multer";
 import nextPkg from "next";
 
 import { authContext } from "@/lib/auth";
-import db from "@/lib/db";
+import { connectDb, seedIfEmpty, disconnectDb } from "@/lib/db";
 
 import * as authLogin from "@/app/api/auth/login/route";
 import * as authLogout from "@/app/api/auth/logout/route";
@@ -232,6 +232,8 @@ const nextApp = (nextPkg as unknown as (o: Record<string, unknown>) => ReturnTyp
 });
 
 async function main(): Promise<void> {
+  await connectDb();
+  await seedIfEmpty();
   await nextApp.prepare();
   const handle = nextApp.getRequestHandler();
   app.use((req: ExRequest, res: ExResponse) => {
@@ -240,9 +242,18 @@ async function main(): Promise<void> {
       if (!res.headersSent) res.status(500).send("Internal server error");
     });
   });
-  app.listen(port, hostname, () => {
+  const server = app.listen(port, hostname, () => {
     console.log(`[dermai] server ready on http://${hostname}:${port} (dev=${dev})`);
   });
+
+  const shutdown = () => {
+    server.close(() => {
+      void disconnectDb();
+      process.exit(0);
+    });
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }
 
 void main().catch((e) => {

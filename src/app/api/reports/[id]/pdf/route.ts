@@ -1,4 +1,4 @@
-import db, { ScreeningRow, UserRow } from "@/lib/db";
+import { getUserById, getScreeningById } from "@/lib/db";
 import { jsonError, requireAuth, isError } from "@/lib/http";
 import fs from "node:fs";
 import path from "node:path";
@@ -10,12 +10,8 @@ export async function GET(_req: Request, ctx: Ctx) {
   const session = await requireAuth();
   if (isError(session)) return session;
 
-  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(session.userId) as
-    | UserRow
-    | undefined;
-  const screening = db.prepare("SELECT * FROM screenings WHERE id = ?").get(ctx.params.id) as
-    | ScreeningRow
-    | undefined;
+  const user = await getUserById(session.userId);
+  const screening = await getScreeningById(Number(ctx.params.id));
 
   if (!screening) return jsonError("Screening not found.", 404);
   if (screening.user_id !== user?.id && user?.role !== "admin") {

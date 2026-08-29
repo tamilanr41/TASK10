@@ -1,4 +1,4 @@
-import db, { DoctorRow as DbDoctor, doctorToDict } from "@/lib/db";
+import { listDoctors, doctorToDict, DoctorRow } from "@/lib/db";
 import { json, requireAuth, isError } from "@/lib/http";
 import { filterDoctors } from "@/lib/ai/doctorMatcher";
 
@@ -11,9 +11,9 @@ export async function GET(req: Request) {
   const area = searchParams.get("screening_area") || "";
   const severity = searchParams.get("severity") || "moderate";
 
-  const doctors = db.prepare("SELECT * FROM doctors ORDER BY created_at ASC").all() as DbDoctor[];
+  const doctors = await listDoctors();
   const matched = filterDoctors({ city, screening_area: area, severity }, doctors);
-  const payload = matched.map((d) => doctorToDict(d as DbDoctor));
+  const payload = matched.map((d) => doctorToDict(d as unknown as DoctorRow));
 
   return json({
     doctors: payload,

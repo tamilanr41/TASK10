@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import db, { screeningToDict, ScreeningRow, loadJson, UserRow } from "@/lib/db";
+import { getUserById, listSampleDoctors, insertScreening, updateScreeningReportPath, screeningToDict } from "@/lib/db";
 import { json, jsonError, requireAuth, isError, readJson } from "@/lib/http";
 import { normalizeAnswers } from "@/lib/ai/questionnaire";
 import { runMultimodal } from "@/lib/ai/multimodal";
@@ -20,9 +20,7 @@ export async function POST(req: NextRequest) {
   const session = await requireAuth();
   if (isError(session)) return session;
 
-  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(session.userId) as
-    | UserRow
-    | undefined;
+  const user = await getUserById(session.userId);
   if (!user) return jsonError("User not found.", 404);
 
   const data = await readJson(req);
@@ -64,9 +62,7 @@ export async function POST(req: NextRequest) {
   );
 
   const severity = String(combined.overall.severity);
-  const doctors = db
-    .prepare("SELECT * FROM doctors WHERE is_sample = 1")
-    .all() as Array<Record<string, unknown>>;
+  const doctors = (await listSampleDoctors()) as unknown as Array<Record<string, unknown>>;
   const matched = filterDoctors(
     { city: data.city || "", screening_area: screeningType, severity },
     doctors as never[]
@@ -86,39 +82,25 @@ export async function POST(req: NextRequest) {
   };
   const hydration = (nutrition.hydration as { guidance?: string }) || {};
 
-  const info = db
-    .prepare(
-      `INSERT INTO screenings (
-        user_id, screening_type, mode, model_version,
-        scalp_image_path, nail_image_path,
-        symptoms, diet_info, predictions,
-        overall_condition, overall_confidence, overall_severity, summary_text,
-        nutrition_insights, hydration_insight, recommendations, doctor_recommendation
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .run(
-      session.userId,
-      screeningType,
-      mode,
-      MODEL_VERSION,
-      scalpRel || null,
-      nailRel || null,
-      JSON.stringify({ answers, diet }),
-      JSON.stringify(diet),
-      JSON.stringify(combined),
-      String(combined.overall.condition),
-      Number(combined.overall.confidence),
-      severity,
-      String(combined.overall.summary),
-      JSON.stringify(nutrition),
-      String(hydration.guidance || ""),
-      JSON.stringify(recommendations),
-      JSON.stringify(doctorRec)
-    );
-
-  const screening = db
-    .prepare("SELECT * FROM screenings WHERE id = ?")
-    .get(info.lastInsertRowid) as ScreeningRow;
+  const screening = await insertScreening({
+    user_id: session.userId,
+    screening_type: screeningType,
+    mode,
+    model_version: MODEL_VERSION,
+    scalp_image_path: scalpRel || null,
+    nail_image_path: nailRel || null,
+    symptoms: JSON.stringify({ answers, diet }),
+    diet_info: JSON.stringify(diet),
+    predictions: JSON.stringify(combined),
+    overall_condition: String(combined.overall.condition),
+    overall_confidence: Number(combined.overall.confidence),
+    overall_severity: severity,
+    summary_text: String(combined.overall.summary),
+    nutrition_insights: JSON.stringify(nutrition),
+    hydration_insight: String(hydration.guidance || ""),
+    recommendations: JSON.stringify(recommendations),
+    doctor_recommendation: JSON.stringify(doctorRec),
+  });
 
   // PDF report (best-effort, like the backend)
   try {
@@ -135,7 +117,7 @@ export async function POST(req: NextRequest) {
     const reportName = `dermai_screening_${screening.id}_${stamp}.pdf`;
     const reportRel = path.join("reports", reportName).replace(/\\/g, "/");
     fs.writeFileSync(path.join(REPORT_DIR, reportName), buf);
-    db.prepare("UPDATE screenings SET report_path = ? WHERE id = ?").run(reportRel, screening.id);
+    await updateScreeningReportPath(screening.id, reportRel);
     screening.report_path = reportRel;
   } catch {
     // PDF generation is best-effort.

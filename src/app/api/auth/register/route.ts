@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import db, { userToDict, UserRow } from "@/lib/db";
+import { getUserByEmail, insertUser, userToDict } from "@/lib/db";
 import { hashPassword, checkPassword, signToken } from "@/lib/auth";
 import { validateSignup } from "@/lib/validation";
 import { json, jsonError, readJson } from "@/lib/http";
@@ -22,29 +22,21 @@ export async function POST(req: NextRequest) {
   if (errors && Object.keys(errors).length)
     return jsonError("Validation failed", 400, { fields: errors });
 
-  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(clean!.email as string);
+  const existing = await getUserByEmail(clean!.email as string);
   if (existing) return jsonError("This email is already registered.", 409);
 
-  const info = db
-    .prepare(
-      "INSERT INTO users (name, email, password_hash, age, sex, role) VALUES (?, ?, ?, ?, ?, ?)"
-    )
-    .run(
-      clean!.name,
-      clean!.email,
-      hashPassword(clean!.password as string),
-      clean!.age ?? null,
-      clean!.sex ?? null,
-      "user"
-    );
-
-  const user = db
-    .prepare("SELECT * FROM users WHERE id = ?")
-    .get(info.lastInsertRowid) as UserRow;
+  const user = await insertUser({
+    name: clean!.name as string,
+    email: clean!.email as string,
+    password_hash: hashPassword(clean!.password as string),
+    age: (clean!.age ?? null) as number | null,
+    sex: (clean!.sex ?? null) as string | null,
+    role: "user",
+  });
   const token = await signToken(user.id, user.role);
 
   const res = json(
-    { message: "Account created successfully.", token, user: userToDict(user) },
+    { message: "Account created successfully.", token, user: await userToDict(user) },
     201
   );
   setAuthCookie(res, token);

@@ -1,4 +1,4 @@
-import db, { ReminderRow, reminderToDict, UserRow } from "@/lib/db";
+import { getUserById, getReminderById, updateReminderById, deleteReminderById, reminderToDict } from "@/lib/db";
 import { json, jsonError, requireAuth, isError, readJson } from "@/lib/http";
 
 type Ctx = { params: { id: string } };
@@ -7,18 +7,13 @@ export async function PUT(req: Request, ctx: Ctx) {
   const session = await requireAuth();
   if (isError(session)) return session;
 
-  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(session.userId) as
-    | UserRow
-    | undefined;
-  const reminder = db.prepare("SELECT * FROM reminders WHERE id = ?").get(ctx.params.id) as
-    | ReminderRow
-    | undefined;
+  const user = await getUserById(session.userId);
+  const reminder = await getReminderById(Number(ctx.params.id));
   if (!reminder || reminder.user_id !== user?.id) return jsonError("Reminder not found.", 404);
 
   const data = await readJson(req);
-  const sets: string[] = [];
-  const vals: unknown[] = [];
-  const fields = [
+  const fields: Record<string, unknown> = {};
+  const list = [
     "is_enabled",
     "title",
     "description",
@@ -26,37 +21,26 @@ export async function PUT(req: Request, ctx: Ctx) {
     "reminder_time",
     "repeat_frequency",
   ] as const;
-  for (const f of fields) {
+  for (const f of list) {
     if (f in data) {
-      if (f === "is_enabled") {
-        sets.push("is_enabled = ?");
-        vals.push(data[f] ? 1 : 0);
-      } else {
-        sets.push(`${f} = ?`);
-        vals.push(String(data[f] ?? "").trim());
-      }
+      if (f === "is_enabled") fields[f] = data[f] ? 1 : 0;
+      else fields[f] = String(data[f] ?? "").trim();
     }
   }
-  if (sets.length) {
-    db.prepare(`UPDATE reminders SET ${sets.join(", ")} WHERE id = ?`).run(...vals, ctx.params.id);
-  }
+  if (Object.keys(fields).length) await updateReminderById(Number(ctx.params.id), fields);
 
-  const updated = db.prepare("SELECT * FROM reminders WHERE id = ?").get(ctx.params.id) as ReminderRow;
-  return json({ message: "Reminder updated.", reminder: reminderToDict(updated) });
+  const updated = await getReminderById(Number(ctx.params.id));
+  return json({ message: "Reminder updated.", reminder: updated ? reminderToDict(updated) : null });
 }
 
 export async function DELETE(_req: Request, ctx: Ctx) {
   const session = await requireAuth();
   if (isError(session)) return session;
 
-  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(session.userId) as
-    | UserRow
-    | undefined;
-  const reminder = db.prepare("SELECT * FROM reminders WHERE id = ?").get(ctx.params.id) as
-    | ReminderRow
-    | undefined;
+  const user = await getUserById(session.userId);
+  const reminder = await getReminderById(Number(ctx.params.id));
   if (!reminder || reminder.user_id !== user?.id) return jsonError("Reminder not found.", 404);
 
-  db.prepare("DELETE FROM reminders WHERE id = ?").run(ctx.params.id);
+  await deleteReminderById(Number(ctx.params.id));
   return json({ message: "Reminder deleted." });
 }

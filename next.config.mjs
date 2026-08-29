@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    serverComponentsExternalPackages: ["better-sqlite3", "jimp", "pdf-lib", "bcryptjs"],
+    serverComponentsExternalPackages: ["mongodb", "jimp", "pdf-lib", "bcryptjs"],
   },
 };
 

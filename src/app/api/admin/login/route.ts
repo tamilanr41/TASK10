@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import db, { userToDict, UserRow } from "@/lib/db";
+import { getUserByEmail, userToDict } from "@/lib/db";
 import { checkPassword, signToken } from "@/lib/auth";
 import { json, jsonError, readJson } from "@/lib/http";
 
@@ -8,9 +8,7 @@ export async function POST(req: NextRequest) {
   const email = String(data.email || "").trim().toLowerCase();
   const password = String(data.password || "");
 
-  const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email) as
-    | UserRow
-    | undefined;
+  const user = await getUserByEmail(email);
   if (!user || user.role !== "admin") {
     return jsonError("Not an administrator account.", 403);
   }
@@ -22,7 +20,7 @@ export async function POST(req: NextRequest) {
   }
 
   const token = await signToken(user.id, "admin");
-  const res = json({ token, user: userToDict(user) });
+  const res = json({ token, user: await userToDict(user) });
   res.cookies.set("dermai_token", token, {
     httpOnly: true,
     sameSite: "lax",
