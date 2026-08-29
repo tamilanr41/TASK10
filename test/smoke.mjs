@@ -1,9 +1,11 @@
 import { spawn } from "node:child_process";
 import { deflateSync } from "node:zlib";
+import { appendFileSync } from "node:fs";
+import path from "node:path";
+import os from "node:os";
 
 const PORT = 3100;
 const BASE = `http://127.0.0.1:${PORT}`;
-const bin = String.raw`node_modules\.bin\next.cmd`;
 
 const CRC_TABLE = new Int32Array(256).map((_, n) => {
   let c = n;
@@ -89,12 +91,18 @@ const TINY_PNG = makePng(64);
 
 async function run() {
   if (!process.env.DERMAI_AWAIT_SERVER) {
-    server = spawn(bin, ["start", "-p", String(PORT)], {
+    server = spawn(process.execPath, ["server-dist/index.cjs"], {
       cwd: process.cwd(),
-      shell: true,
-      stdio: ["ignore", "ignore", "pipe"],
+      stdio: ["ignore", "pipe", "pipe"],
+      env: {
+        ...process.env,
+        PORT: String(PORT),
+        NODE_ENV: "production",
+        DATA_DIR: path.join(os.tmpdir(), `dermai-smoke-${Date.now()}`),
+      },
     });
-    server.stderr.on("data", () => {});
+    server.stderr.on("data", (d) => appendFileSync(path.join(os.tmpdir(), "dermai-smoke-child.log"), d));
+    server.stdout.on("data", (d) => appendFileSync(path.join(os.tmpdir(), "dermai-smoke-child.log"), d));
   }
   await waitReady(`${BASE}/`);
 

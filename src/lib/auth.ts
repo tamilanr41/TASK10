@@ -1,12 +1,14 @@
-import { cookies } from "next/headers";
+import { AsyncLocalStorage } from "node:async_hooks";
 import * as jose from "jose";
 import bcrypt from "bcryptjs";
+
+export type RequestAuthContext = { token?: string };
+
+export const authContext = new AsyncLocalStorage<RequestAuthContext>();
 
 const SECRET = new TextEncoder().encode(
   process.env.DERMAI_JWT_SECRET || "dermai-jwt-dev-secret-key-please-change-now"
 );
-
-const COOKIE = "dermai_token";
 
 export type Session = {
   userId: number;
@@ -34,8 +36,7 @@ export async function verifyToken(token: string): Promise<Session | null> {
 }
 
 export async function getSession(): Promise<Session | null> {
-  const store = cookies();
-  const token = store.get(COOKIE)?.value;
+  const token = authContext.getStore()?.token;
   if (!token) return null;
   return await verifyToken(token);
 }

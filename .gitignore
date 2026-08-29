@@ -2,6 +2,7 @@ node_modules
 .next
 out
 dist
+server-dist
 data
 *.log
 next-env.d.ts
