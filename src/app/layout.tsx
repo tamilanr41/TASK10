@@ -28,8 +28,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${outfit.variable} ${mono.variable}`}>
-      <body>
+    <html lang="en" suppressHydrationWarning className={`${outfit.variable} ${mono.variable}`}>
+      <body suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
