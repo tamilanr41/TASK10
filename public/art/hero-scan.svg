@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="520" viewBox="0 0 700 520" fill="none">
+  <defs>
+    <linearGradient id="skinBase" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FDF2E9"/><stop offset="1" stop-color="#F5E6D3"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="transparent"/><stop offset="1" stop-color="#000" stop-opacity="0.15"/>
+    </radialGradient>
+    <pattern id="skinTexture" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="0.4" fill="#E8D5C4" opacity="0.4"/>
+      <circle cx="6" cy="6" r="0.3" fill="#E8D5C4" opacity="0.3"/>
+      <circle cx="4" cy="7" r="0.2" fill="#E8D5C4" opacity="0.2"/>
+    </pattern>
+    <pattern id="folliclePattern" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="12" cy="12" r="1.8" fill="#D4C4B0" opacity="0.6"/>
+      <circle cx="12" cy="12" r="0.6" fill="#8B7D6B" opacity="0.8"/>
+    </pattern>
+    <filter id="softFocus"><feGaussianBlur stdDeviation="0.8"/></filter>
+  </defs>
+
+  <!-- Clean white card background -->
+  <rect width="700" height="520" rx="16" fill="white"/>
+  <rect width="700" height="520" rx="16" fill="url(#vignette)"/>
+
+  <!-- Dermoscopy view - realistic scalp dermoscopy -->
+  <g transform="translate(350 260)" filter="url(#softFocus)">
+    <!-- Skin base -->
+    <circle r="180" fill="url(#skinBase)"/>
+    <circle r="180" fill="url(#skinTexture)"/>
+
+    <!-- Hair follicles (dermoscopic view) -->
+    <g fill="url(#folliclePattern)">
+      <circle cx="-120" cy="-80" r="45"/>
+      <circle cx="100" cy="-90" r="40"/>
+      <circle cx="-130" cy="60" r="38"/>
+      <circle cx="130" cy="70" r="35"/>
+    </g>
+
+    <!-- Individual follicles detail -->
+    <g fill="#C9B8A6">
+      <circle cx="-135" cy="-95" r="6"/><circle cx="-115" cy="-70" r="5.5"/>
+      <circle cx="-100" cy="-85" r="5"/><circle cx="-120" cy="-60" r="6"/>
+      <circle cx="85" cy="-105" r="5.5"/><circle cx="115" cy="-80" r="5"/>
+      <circle cx="100" cy="-65" r="6"/><circle cx="125" cy="-95" r="5"/>
+      <circle cx="-140" cy="45" r="5"/><circle cx="-110" cy="75" r="5.5"/>
+      <circle cx="-95" cy="55" r="5"/><circle cx="-125" cy="85" r="5.5"/>
+      <circle cx="115" cy="55" r="5.5"/><circle cx="140" cy="85" r="5"/>
+      <circle cx="125" cy="100" r="5"/><circle cx="150" cy="60" r="5.5"/>
+    </g>
+
+    <!-- Hair shafts emerging -->
+    <g stroke="#8B7D6B" stroke-width="2.5" stroke-linecap="round" opacity="0.7" fill="none">
+      <path d="M-135 -95 q-8 -15 -12 -35"/>
+      <path d="M-115 -70 q0 -18 3 -36"/>
+      <path d="M-100 -85 q8 -15 12 -35"/>
+      <path d="M85 -105 q-5 -20 -8 -40"/>
+      <path d="M115 -80 q0 -20 2 -42"/>
+      <path d="M100 -65 q7 -18 10 -38"/>
+    </g>
+
+    <!-- Central focus area with slight erythema -->
+    <circle cx="15" cy="-10" r="28" fill="#FECACA" opacity="0.25"/>
+    <circle cx="15" cy="-10" r="28" stroke="#EF4444" stroke-opacity="0.3" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <circle cx="15" cy="-10" r="10" fill="#EF4444" opacity="0.15"/>
+    <!-- Yellowish scale -->
+    <ellipse cx="15" cy="-10" rx="18" ry="12" fill="#FEF08A" opacity="0.3"/>
+
+    <!-- Measurement overlay -->
+    <g stroke="#059669" stroke-width="1.5" fill="none" opacity="0.8">
+      <path d="M15 -50 v12 M15 28 v12 M-20 -10 h12 M48 -10 h12"/>
+      <text x="15" y="-58" text-anchor="middle" font-family="ui-monospace,monospace" font-size="11" fill="#059669">2.4mm</text>
+    </g>
+  </g>
+
+  <!-- Side panel - clinical data -->
+  <g font-family="ui-monospace,monospace" font-size="12" fill="#374151">
+    <rect x="24" y="32" width="200" height="160" rx="12" fill="#F0FDF4" stroke="#D1FAE5" stroke-width="1"/>
+    <text x="40" y="58" font-size="10" letter-spacing="1.5" fill="#059669">DERMOSCOPY • SCALP</text>
+    <line x1="40" y1="68" x2="208" y2="68" stroke="#D1FAE5"/>
+    <text x="40" y="94" fill="#059669">● Follicular density: Normal</text>
+    <text x="40" y="114" fill="#059669">● Hair shaft thickness: 68μm</text>
+    <text x="40" y="134" fill="#EF4444">● Perifollicular erythema: Mild</text>
+    <text x="40" y="154" fill="#F59E0B">● Yellow scale: Present</text>
+    <text x="40" y="174" fill="#6B7280">Confidence: 91%</text>
+
+    <rect x="476" y="32" width="200" height="130" rx="12" fill="#FEFCE8" stroke="#FDE68A" stroke-width="1"/>
+    <text x="492" y="58" font-size="10" letter-spacing="1.5" fill="#D97706">PATIENT SYMPTOMS</text>
+    <line x1="492" y1="68" x2="658" y2="68" stroke="#FDE68A"/>
+    <text x="492" y="90" fill="#374151">Itching: 6/10</text>
+    <text x="492" y="110" fill="#374151">Duration: 8 weeks</text>
+    <text x="492" y="130" fill="#374151">Scaling: Moderate</text>
+    <text x="492" y="150" fill="#374151">Hair fall: Increased</text>
+  </g>
+
+  <!-- Bottom status -->
+  <rect x="24" y="460" width="652" height="40" rx="8" fill="#F0FDF4" stroke="#D1FAE5" stroke-width="1"/>
+  <text x="40" y="485" fill="#059669" font-family="ui-monospace,monospace" font-size="11" letter-spacing="1">ANALYSIS COMPLETE • AI CONFIDENCE 91% • SEVERITY: LOW</text>
+  <circle cx="630" cy="480" r="6" fill="#059669"/>
+
+  <!-- Frame -->
+  <rect x="8" y="8" width="684" height="504" rx="12" stroke="#E5E7EB" stroke-width="2" fill="none"/>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+  <defs>
+    <pattern id="tex" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="0.3" fill="#E8D5C4" opacity="0.6"/>
+      <circle cx="5" cy="5" r="0.2" fill="#E8D5C4" opacity="0.4"/>
+    </pattern>
+  </defs>
+  <rect width="160" height="160" rx="16" fill="white" stroke="#E5E7EB" stroke-width="2"/>
+  <circle cx="80" cy="80" r="68" fill="#FDF2E9" stroke="#E8D5C4" stroke-width="1.5"/>
+  <circle cx="80" cy="80" r="68" fill="url(#tex)"/>
+  <!-- Realistic follicles -->
+  <g fill="#C9B8A6">
+    <circle cx="35" cy="35" r="4.5"/><circle cx="65" cy="28" r="4"/>
+    <circle cx="95" cy="32" r="4.5"/><circle cx="120" cy="40" r="4"/>
+    <circle cx="30" cy="65" r="4.5"/><circle cx="55" cy="60" r="4"/>
+    <circle cx="85" cy="68" r="4.5"/><circle cx="115" cy="62" r="4"/>
+    <circle cx="40" cy="95" r="4.5"/><circle cx="70" cy="90" r="4"/>
+    <circle cx="100" cy="98" r="4.5"/><circle cx="125" cy="92" r="4"/>
+    <circle cx="38" cy="125" r="4.5"/><circle cx="72" cy="120" r="4"/>
+  </g>
+  <!-- Hair shafts -->
+  <g stroke="#8B7D6B" stroke-width="2" stroke-linecap="round" opacity="0.5" fill="none">
+    <path d="M35 35 q-4 -10 -6 -25"/><path d="M65 28 q0 -12 3 -26"/>
+    <path d="M95 32 q4 -10 6 -25"/><path d="M120 40 q0 -12 2 -28"/>
+    <path d="M30 65 q-5 -12 -8 -26"/><path d="M55 60 q0 -14 3 -30"/>
+  </g>
+  <!-- Mild erythema indicator -->
+  <circle cx="105" cy="105" r="14" fill="#FECACA" opacity="0.3"/>
+  <circle cx="105" cy="105" r="14" stroke="#EF4444" stroke-opacity="0.4" stroke-width="1.5" stroke-dasharray="4 4"/>
+</svg>

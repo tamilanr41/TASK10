@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="300" viewBox="0 0 640 300" fill="none">
+  <defs>
+    <linearGradient id="p1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#059669"/><stop offset="1" stop-color="#0D9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="300" rx="12" fill="white" stroke="#E5E7EB" stroke-width="1.5"/>
+
+  <!-- Step 1: Clinical Photo -->
+  <g transform="translate(30 20)">
+    <rect width="140" height="120" rx="8" fill="#F9FAFB" stroke="#E5E7EB" stroke-width="1"/>
+    <rect x="8" y="8" width="124" height="104" rx="6" fill="url(#p1)" opacity="0.08"/>
+    <ellipse cx="70" cy="60" rx="38" ry="28" fill="#FDF2E9" stroke="#E8D5C4" stroke-width="1.5"/>
+    <ellipse cx="70" cy="60" rx="38" ry="28" fill="url(#tex)" opacity="0.5"/>
+    <g fill="#C9B8A6"><circle cx="45" cy="45" r="3"/><circle cx="95" cy="50" r="2.5"/><circle cx="55" cy="75" r="3"/></g>
+    <text x="70" y="145" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10" fill="#059669">CLINICAL IMAGE</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M170 80 L200 80" stroke="#059669" stroke-width="2.5" marker-end="url(#arr)"/>
+  <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10" fill="#059669"/></marker></defs>
+
+  <!-- Step 2: Preprocessing -->
+  <g transform="translate(210 20)">
+    <rect width="140" height="120" rx="8" fill="#F9FAFB" stroke="#E5E7EB" stroke-width="1"/>
+    <g transform="translate(10 12)">
+      <rect width="36" height="36" rx="6" fill="#059669" opacity="0.15"/>
+      <rect x="44" y="0" width="36" height="36" rx="6" fill="#059669" opacity="0.08"/>
+      <rect x="88" y="0" width="36" height="36" rx="6" fill="#059669" opacity="0.05"/>
+    </g>
+    <text x="70" y="145" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10" fill="#059669">PREPROCESS</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M350 80 L375 80" stroke="#059669" stroke-width="2.5"/>
+  <path d="M375 80 L385 80" stroke="#0D9488" stroke-width="2" stroke-dasharray="5 3"/>
+
+  <!-- Step 3: AI Analysis (3 models) -->
+  <g transform="translate(405 20)">
+    <circle cx="70" cy="60" r="40" fill="#F0FDF4" stroke="#D1FAE5" stroke-width="1.5"/>
+    <circle cx="70" cy="60" r="28" stroke="#059669" stroke-opacity="0.3" stroke-width="1.5" stroke-dasharray="4 6"/>
+    <circle cx="70" cy="60" r="12" fill="url(#p1)" opacity="0.9"/>
+    <text x="70" y="145" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10" fill="#059669">CNN × 3</text>
+  </g>
+
+  <!-- Step 4: Fusion Output -->
+  <g transform="translate(30 175)">
+    <rect width="580" height="70" rx="10" fill="#F0FDF4" stroke="#D1FAE5" stroke-width="1.5"/>
+    <text x="290" y="35" text-anchor="middle" fill="#059669" font-family="ui-monospace,monospace" font-size="12" letter-spacing="2">MULTIMODAL FUSION → CONDITION · CONFIDENCE · SEVERITY · GUIDANCE</text>
+    <g transform="translate(20 45)" font-size="9" fill="#059669">
+      <rect x="10" y="0" width="100" height="16" rx="8" fill="#D1FAE5"/><text x="60" y="11" text-anchor="middle" font-family="ui-monospace,monospace">SEB DERM</text>
+      <rect x="120" y="0" width="100" height="16" rx="8" fill="#D1FAE5"/><text x="170" y="11" text-anchor="middle" font-family="ui-monospace,monospace">91%</text>
+      <rect x="230" y="0" width="100" height="16" rx="8" fill="#FEF08A"/><text x="280" y="11" text-anchor="middle" font-family="ui-monospace,monospace">LOW</text>
+      <rect x="340" y="0" width="120" height="16" rx="8" fill="#D1FAE5"/><text x="400" y="11" text-anchor="middle" font-family="ui-monospace,monospace">MOISTURIZE</text>
+      <rect x="470" y="0" width="80" height="16" rx="8" fill="#D1FAE5"/><text x="510" y="11" text-anchor="middle" font-family="ui-monospace,monospace">FOLLOW-UP</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: dermai
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20.x
+      - key: DATA_DIR
+        value: /data
+      - key: PORT
+        value: 3000

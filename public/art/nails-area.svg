@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+  <defs>
+    <pattern id="tex" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="0.3" fill="#E8D5C4" opacity="0.4"/>
+    </pattern>
+  </defs>
+  <rect width="160" height="160" rx="16" fill="white" stroke="#E5E7EB" stroke-width="2"/>
+  <g transform="translate(80 80) rotate(-18)">
+    <!-- Realistic nail plate -->
+    <path d="M-50 -55 C -40 -62 -25 -62 -15 -58 L 15 -55 C 25 -52 30 -35 28 -12 C 27 -2 22 6 12 16 L -8 18 C -18 18 -26 12 -30 0 L -40 -45 Z" fill="#FBF5EB" stroke="#E8D5C4" stroke-width="1.5"/>
+    <path d="M-50 -55 C -40 -62 -25 -62 -15 -58 L 15 -55 C 25 -52 30 -35 28 -12 C 27 -2 22 6 12 16 L -8 18 C -18 18 -26 12 -30 0 L -40 -45 Z" fill="url(#tex)" opacity="0.5"/>
+    <!-- Longitudinal striations -->
+    <g stroke="#D4C4B0" stroke-width="1.2" fill="none" opacity="0.7">
+      <path d="M-42 -50 q32 8 42 -4"/><path d="M-42 -30 q32 10 42 -2"/>
+      <path d="M-42 -10 q30 10 40 2"/><path d="M-42 10 q26 8 36 2"/>
+    </g>
+    <!-- Subungual hyperkeratosis / discoloration -->
+    <ellipse cx="2" cy="2" rx="16" ry="10" fill="#FECACA" opacity="0.35"/>
+    <ellipse cx="2" cy="2" rx="16" ry="10" stroke="#EF4444" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="5 3"/>
+  </g>
+  <!-- Proximal nail fold -->
+  <path d="M-50 -55 C -40 -62 -25 -62 -15 -58" stroke="#E8D5C4" stroke-width="2" fill="none" opacity="0.7"/>
+</svg>
