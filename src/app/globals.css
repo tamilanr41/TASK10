@@ -3277,4 +3277,35 @@ html {
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
   }
+
+  /* ---- 2-1-2 staggered mobile layout (Analysis Modules) ---- */
+  .module-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+  }
+  .module-grid > *:nth-child(3n + 3) {
+    grid-column: 1 / -1;
+  }
+  .module-grid > *:nth-child(3n + 3) .feature-card {
+    text-align: center;
+    padding-top: 1.3rem;
+  }
+  .module-grid > *:nth-child(3n + 3) .feature-card .icon-tile {
+    margin: 0 auto 0.9rem;
+  }
+  .module-grid > *:nth-child(3n + 3) .feature-card h3 {
+    padding-right: 0;
+  }
+
+  /* ---- 2-1-2 staggered mobile layout (Real Dermatology) ---- */
+  .derma-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+  }
+  .derma-grid > *:nth-child(3n + 3) {
+    grid-column: 1 / -1;
+  }
+  .derma-grid > *:nth-child(3n + 3) .gallery-item img {
+    height: 210px;
+  }
 }
