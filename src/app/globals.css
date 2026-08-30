@@ -3283,6 +3283,10 @@ html {
     grid-template-columns: 1fr 1fr;
     gap: 0.9rem;
   }
+  .module-grid > *,
+  .derma-grid > * {
+    min-width: 0;
+  }
   .module-grid > *:nth-child(3n + 3) {
     grid-column: 1 / -1;
   }
@@ -3308,4 +3312,10 @@ html {
   .derma-grid > *:nth-child(3n + 3) .gallery-item img {
     height: 210px;
   }
+}
+
+/* ---- global guard: never allow stray horizontal scroll ---- */
+html,
+body {
+  overflow-x: hidden;
 }
