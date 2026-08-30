@@ -47,7 +47,7 @@ export default function AdminDashboardPage() {
     { to: "/admin/conditions", label: "Conditions", desc: "Manage screening conditions and their labels.", icon: "folder", tone: "violet" },
     { to: "/admin/nutrition", label: "Nutrition", desc: "Curate nutritional and hydration guidance.", icon: "nutrition", tone: "amber" },
     { to: "/admin/recommendations", label: "Recommendations", desc: "Tailored when-to-consult guidance.", icon: "quiz", tone: "rose" },
-    { to: "/admin", label: "Overview stats", desc: "Usage, severity and activity analytics.", icon: "dashboard", tone: "green" },
+    { to: "/admin/screenings", label: "Screenings", desc: "Inspect every screening record across all users.", icon: "scan", tone: "green" },
   ];
 
   return (

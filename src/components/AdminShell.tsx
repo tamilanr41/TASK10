@@ -9,6 +9,7 @@ import { PageFade, motion } from "@/components/motion";
 const LINKS: { to: string; label: string; icon: IconName }[] = [
   { to: "/admin", label: "Dashboard", icon: "dashboard" },
   { to: "/admin/users", label: "Users", icon: "users" },
+  { to: "/admin/screenings", label: "Screenings", icon: "scan" },
   { to: "/admin/doctors", label: "Doctors", icon: "hospital" },
   { to: "/admin/conditions", label: "Conditions", icon: "folder" },
   { to: "/admin/nutrition", label: "Nutrition", icon: "nutrition" },

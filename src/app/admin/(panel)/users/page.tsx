@@ -20,17 +20,29 @@ type UserForm = {
   password: string;
   confirm_password: string;
   role: string;
+  age: string;
+  sex: string;
 };
 
-const EMPTY: UserForm = { name: "", email: "", password: "", confirm_password: "", role: "user" };
+const EMPTY: UserForm = {
+  name: "",
+  email: "",
+  password: "",
+  confirm_password: "",
+  role: "user",
+  age: "",
+  sex: "",
+};
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[] | null>(null);
   const [search, setSearch] = useState("");
   const [err, setErr] = useState("");
   const [form, setForm] = useState<UserForm>(EMPTY);
+  const [editing, setEditing] = useState<AdminUser | null>(null);
   const [formErr, setFormErr] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [formOk, setFormOk] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const load = (q = "") => {
     api<{ users: AdminUser[] }>(`/api/admin/users${q ? `?search=${encodeURIComponent(q)}` : ""}`)
@@ -43,26 +55,71 @@ export default function AdminUsersPage() {
   }, []);
 
   const toggle = async (u: AdminUser) => {
-    await api(`/api/admin/users/${u.id}/status`, { method: "PUT", body: { is_active: !u.is_active } });
-    load(search);
+    try {
+      await api(`/api/admin/users/${u.id}/status`, { method: "PUT", body: { is_active: !u.is_active } });
+      load(search);
+    } catch (e) {
+      setFormErr((e as Error).message);
+    }
   };
 
-  const set = (k: Exclude<keyof UserForm, "role">) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const remove = async (u: AdminUser) => {
+    if (!window.confirm(`Delete "${u.name}" (${u.email}) and all of their data? This cannot be undone.`)) return;
+    try {
+      await api(`/api/admin/users/${u.id}`, { method: "DELETE" });
+      if (editing?.id === u.id) resetForm();
+      load(search);
+    } catch (e) {
+      setFormErr((e as Error).message);
+    }
+  };
+
+  const startEdit = (u: AdminUser) => {
+    setEditing(u);
+    setFormErr("");
+    setFormOk("");
+    setForm({
+      name: u.name,
+      email: u.email,
+      password: "",
+      confirm_password: "",
+      role: u.role,
+      age: "",
+      sex: "",
+    });
+  };
+
+  const resetForm = () => {
+    setEditing(null);
+    setForm(EMPTY);
+    setFormOk("");
+  };
+
+  const set = (k: Exclude<keyof UserForm, "role" | "sex">) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [k]: e.target.value });
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormErr("");
-    setSaved(false);
+    setFormOk("");
+    setBusy(true);
     try {
-      await api("/api/admin/users", { method: "POST", body: form });
-      setForm(EMPTY);
-      setSaved(true);
+      const body = editing
+        ? { name: form.name, email: form.email, password: form.password, role: form.role, age: form.age, sex: form.sex }
+        : { ...form, age: form.age, sex: form.sex };
+      const res = editing
+        ? await api<{ message: string }>(`/api/admin/users/${editing.id}`, { method: "PUT", body })
+        : await api<{ message: string }>("/api/admin/users", { method: "POST", body });
+      setFormOk(res.message || (editing ? "User updated." : "User created."));
+      if (editing) resetForm();
+      else setForm(EMPTY);
       load(search);
     } catch (ex) {
       const f = (ex as { fields?: Record<string, string> }).fields;
       if (f) setFormErr(Object.values(f)[0] || (ex as Error).message);
       else setFormErr((ex as Error).message);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -78,10 +135,12 @@ export default function AdminUsersPage() {
 
       <div className="grid grid-2">
         <div className="card">
-          <h3>Add user</h3>
-          <p className="small muted mb-2">Create a new account with a specific role.</p>
+          <h3>{editing ? `Edit user #${editing.id}` : "Add user"}</h3>
+          <p className="small muted mb-2">
+            {editing ? `Editing ${editing.name} · leave password blank to keep it.` : "Create a new account with a specific role."}
+          </p>
           {formErr && <div className="alert alert-danger">{formErr}</div>}
-          {saved && <div className="alert alert-success">User created successfully.</div>}
+          {formOk && <div className="alert alert-success">{formOk}</div>}
           <form onSubmit={submit}>
             <div className="field">
               <label>Full name</label>
@@ -100,19 +159,39 @@ export default function AdminUsersPage() {
                   <option value="admin">Admin</option>
                 </select>
               </div>
-              <div />
+              <div className="field">
+                <label>Sex</label>
+                <select className="input" value={form.sex} onChange={(e) => setForm({ ...form, sex: e.target.value })}>
+                  <option value="">—</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                  <option value="prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
             </div>
             <div className="field">
-              <label>Password</label>
-              <input className="input" type="password" required minLength={8} value={form.password} onChange={set("password")} />
+              <label>Age</label>
+              <input className="input" type="number" min={1} max={120} placeholder="Optional" value={form.age} onChange={set("age")} />
             </div>
             <div className="field">
-              <label>Confirm password</label>
-              <input className="input" type="password" required minLength={8} value={form.confirm_password} onChange={set("confirm_password")} />
+              <label>{editing ? "New password (optional)" : "Password"}</label>
+              <input className="input" type="password" required={!editing} minLength={8} value={form.password} onChange={set("password")} />
             </div>
+            {!editing && (
+              <div className="field">
+                <label>Confirm password</label>
+                <input className="input" type="password" required minLength={8} value={form.confirm_password} onChange={set("confirm_password")} />
+              </div>
+            )}
             <p className="small muted mb-2">Password needs 8+ characters, one uppercase letter and one number.</p>
-            <div className="flex-center">
-              <button className="btn btn-primary" type="submit">Create user</button>
+            <div className="flex-center" style={{ gap: "0.5rem" }}>
+              <button className="btn btn-primary" type="submit" disabled={busy}>
+                {busy ? "Saving…" : editing ? "Save changes" : "Create user"}
+              </button>
+              {editing && (
+                <button className="btn btn-secondary" type="button" onClick={resetForm}>Cancel</button>
+              )}
             </div>
           </form>
         </div>
@@ -126,9 +205,8 @@ export default function AdminUsersPage() {
               <th>Email</th>
               <th>Role</th>
               <th>Screenings</th>
-              <th>Joined</th>
               <th>Status</th>
-              <th>Action</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -139,16 +217,19 @@ export default function AdminUsersPage() {
                 <td className="muted">{u.email}</td>
                 <td>{u.role}</td>
                 <td>{u.screening_count}</td>
-                <td className="muted">{u.created_at}</td>
                 <td>
                   <span className={`badge ${u.is_active ? "badge-low" : "badge-high"}`}>
                     {u.is_active ? "Active" : "Disabled"}
                   </span>
                 </td>
                 <td>
-                  <button className={`btn btn-sm ${u.is_active ? "btn-danger" : "btn-secondary"}`} onClick={() => toggle(u)}>
-                    {u.is_active ? "Disable" : "Enable"}
-                  </button>
+                  <div className="flex" style={{ gap: "0.35rem", flexWrap: "wrap" }}>
+                    <button className="btn btn-sm btn-secondary" onClick={() => startEdit(u)}>Edit</button>
+                    <button className={`btn btn-sm ${u.is_active ? "btn-danger" : "btn-secondary"}`} onClick={() => toggle(u)}>
+                      {u.is_active ? "Disable" : "Enable"}
+                    </button>
+                    <button className="btn btn-sm btn-danger" onClick={() => remove(u)}>Delete</button>
+                  </div>
                 </td>
               </tr>
             ))}

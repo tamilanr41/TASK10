@@ -294,6 +294,82 @@ export async function updateUserActive(id: number, active: boolean): Promise<voi
   await requireDb().collection("users").updateOne({ id }, { $set: { is_active: active ? 1 : 0 } });
 }
 
+export async function updateUser(
+  id: number,
+  fields: Partial<{
+    name: string;
+    email: string;
+    password_hash: string;
+    age: number | null;
+    sex: string | null;
+    role: string;
+    is_active: number;
+  }>
+): Promise<void> {
+  const set: Record<string, unknown> = {};
+  const WHITELIST = ["name", "email", "password_hash", "age", "sex", "role", "is_active"] as const;
+  for (const k of WHITELIST) if (fields[k] !== undefined) set[k] = fields[k];
+  if (!Object.keys(set).length) return;
+  await requireDb().collection("users").updateOne({ id }, { $set: set });
+}
+
+export async function deleteUserAndData(id: number): Promise<void> {
+  const db = requireDb();
+  await db.collection("users").deleteOne({ id });
+  await db.collection("screenings").deleteMany({ user_id: id });
+  await db.collection("reminders").deleteMany({ user_id: id });
+  await db.collection("chat").deleteMany({ user_id: id });
+}
+
+export async function listScreeningsWithUser(
+  search?: string,
+  limit = 200
+): Promise<Array<ScreeningRow & { user_name?: string; user_email?: string }>> {
+  const db = requireDb();
+  const q = search || "";
+  let query: Document = {};
+  if (q) {
+    const ids = (
+      await db
+        .collection("users")
+        .find(
+          { $or: [{ name: { $regex: q, $options: "i" } }, { email: { $regex: q, $options: "i" } }] },
+          { projection: { _id: 0, id: 1 } }
+        )
+        .toArray()
+    ).map((d) => d.id);
+    const clauses = ids.length
+      ? [{ user_id: { $in: ids } }, { overall_condition: { $regex: q, $options: "i" } }, { screening_type: { $regex: q, $options: "i" } }]
+      : [{ overall_condition: { $regex: q, $options: "i" } }, { screening_type: { $regex: q, $options: "i" } }];
+    query = { $or: clauses };
+  }
+  const docs = await db
+    .collection("screenings")
+    .find(query as Filter<Document>)
+    .sort({ created_at: -1 })
+    .limit(limit)
+    .toArray();
+  const users = await db
+    .collection("users")
+    .find({}, { projection: { _id: 0, id: 1, name: 1, email: 1 } })
+    .toArray();
+  const byId = new Map(users.map((d: Document) => [d.id, d]));
+  return docs.map((d) => {
+    const r = toRow<ScreeningRow>(d) as ScreeningRow;
+    const u = byId.get(r.user_id) as { name?: string; email?: string } | undefined;
+    return { ...r, user_name: u?.name, user_email: u?.email };
+  });
+}
+
+export async function getUserWithScreening(
+  id: number
+): Promise<(ScreeningRow & { user_name?: string; user_email?: string }) | undefined> {
+  const s = await getScreeningById(id);
+  if (!s) return undefined;
+  const user = await getUserById(s.user_id);
+  return { ...s, user_name: user?.name, user_email: user?.email };
+}
+
 export async function countUsers(): Promise<number> {
   return await requireDb().collection("users").countDocuments({});
 }
