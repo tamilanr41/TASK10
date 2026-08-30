@@ -356,6 +356,32 @@ function resultAnswer(latest: LatestScreening): string {
   );
 }
 
+const SCOPE_WORDS = [
+  "skin", "scalp", "hair", "nail", "nails", "head skin", "beard", "eyebrow",
+  "dandruff", "flak", "itch", "acne", "pimple", "blackhead", "whitehead",
+  "rash", "hive", "eczema", "dermatitis", "psoriasis", "dry", "oily",
+  "moistur", "cleanser", "serum", "sunscreen", "spf", "uv", "sun",
+  "pigment", "melasma", "tan", "mole", "wart", "spot", "scar", "lip",
+  "face", "forehead", "cheek", "neck", "arm", "leg", "foot", "toe",
+  "sweat", "odor", "odour", "hydration", "water", "diet", "nutrition",
+  "vitamin", "iron", "protein", "biotin", "supplement", "treatment",
+  "screening", "result", "report", "severity", "confidence", "dermai",
+];
+
+function outOfScopeReply(): string {
+  return (
+    "I am DermAI's skin-health screening assistant. My scope is limited to " +
+    "scalp and hair concerns, nail health, general skin topics, nutrition and " +
+    "hydration for skin health, and understanding your DermAI screening results " +
+    "or finding a dermatologist.\n\n" +
+    "The question you asked is outside that scope, so I am not able to answer it " +
+    "reliably. If you have a concern about your skin, scalp, hair or nails - for " +
+    "example flaking, itching, hair shedding, nail changes, acne, dryness or " +
+    "pigmentation - I would be happy to give you general guidance. Otherwise, " +
+    "please consult a qualified healthcare professional for that topic."
+  );
+}
+
 function defaultReply(): string {
   return (
     "Thank you for sharing that. To make sure I give you the most useful general " +
@@ -491,6 +517,8 @@ export function chatbotRespond(
   if (hasAny(msg, ["disclaimer", "diagnosis", "medical advice", "trust", "accurate"])) {
     return CHAT_DISCLAIMER;
   }
+
+  if (!hasAny(msg, SCOPE_WORDS)) return outOfScopeReply();
 
   return defaultReply();
 }

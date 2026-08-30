@@ -3082,3 +3082,95 @@ html {
   border-top: 4px solid var(--teal);
   background: linear-gradient(150deg, #ffffff, #f7fafc);
 }
+
+/* ==========================================================================
+   MOBILE-SPECIFIC TREATMENTS (distinct cards + distinct dark footer)
+   ========================================================================== */
+@media (max-width: 680px) {
+  /* ---- distinct mobile footer: dark gradient band, rounded top, centered ---- */
+  .footer {
+    background:
+      radial-gradient(90% 60% at 50% 0%, rgba(13, 148, 136, 0.16), transparent 70%),
+      linear-gradient(180deg, #0b1424, #060b14);
+    border-top: 1px solid rgba(34, 211, 238, 0.2);
+    color: var(--ink-light-dim);
+    border-radius: 24px 24px 0 0;
+    padding: 2.4rem 1.2rem 1.5rem;
+  }
+  .footer-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+  }
+  .footer h4 {
+    color: var(--ink-light);
+    display: inline-block;
+    padding: 0.26rem 0.7rem;
+    border: 1px solid rgba(34, 211, 238, 0.28);
+    border-radius: 999px;
+    background: rgba(13, 148, 136, 0.14);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.6rem;
+  }
+  .footer a { color: rgba(214, 226, 235, 0.85); }
+  .footer a:hover { color: var(--mint); }
+  .footer-brand {
+    border-bottom: 1px dashed rgba(34, 211, 238, 0.25);
+    padding-bottom: 1rem;
+  }
+  .footer-bottom {
+    text-align: center;
+    color: rgba(214, 226, 235, 0.55);
+    border-top-color: rgba(34, 211, 238, 0.2);
+  }
+  .footer-disclaimer {
+    background: rgba(13, 148, 136, 0.12);
+    border: 1px solid rgba(34, 211, 238, 0.2);
+    border-radius: 14px;
+    padding: 0.85rem 1rem;
+    font-size: 0.78rem;
+  }
+
+  /* ---- distinct stat cards: soft corners + mint hairline ---- */
+  .stat-card {
+    border-radius: 18px;
+    padding: 1rem 1.05rem;
+    border-color: rgba(13, 148, 136, 0.18);
+    box-shadow: 0 10px 22px rgba(6, 40, 40, 0.08);
+  }
+  .stat-card-low,
+  .stat-card-mod,
+  .stat-card-high { border-radius: 18px; }
+
+  /* ---- feature cards become left-rail list cards ---- */
+  .feature-card {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.9rem 1rem;
+    border-radius: 16px;
+    border-color: rgba(13, 148, 136, 0.16);
+    background:
+      linear-gradient(180deg, rgba(13, 148, 136, 0.05), rgba(13, 148, 136, 0)),
+      var(--panel);
+  }
+  .feature-card:hover { transform: none; }
+  .feature-card .area-art {
+    width: 58px;
+    height: 58px;
+    margin: 0;
+    flex: 0 0 auto;
+    border-radius: 14px;
+  }
+  .feature-card h3 { margin-top: 0; margin-bottom: 0.25rem; }
+  .feature-card-link h3 { margin-top: 0; }
+  .feature-card p { margin-bottom: 0; }
+
+  /* ---- recent screening + misc cards ---- */
+  .latest-card { border-radius: 16px; }
+  .result-hero { border-radius: 18px; }
+  .doctor-card { border-radius: 16px; }
+  .nutri-card { border-radius: 14px; }
+  .reminder-row { padding: 0.9rem 0.8rem; }
+}

@@ -60,9 +60,46 @@ export async function api<T = Record<string, unknown>>(
     opts.body = JSON.stringify(body);
   }
 
-  const res = await fetch(path.startsWith("http") ? path : `${API_BASE}${path}`, opts);
+  const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
+
+  if (method === "GET" && !isBlob) {
+    const key = `${url}|${getAuthToken() || ""}`;
+    const hit = cache.get(key);
+    if (hit && Date.now() - hit.at < CACHE_TTL) return hit.data as T;
+    const res = await fetch(url, opts);
+    const data = await handle<T>(res);
+    cache.set(key, { at: Date.now(), data });
+    return data;
+  }
+
+  const res = await fetch(url, opts);
   if (isBlob) return res as unknown as T;
-  return handle<T>(res);
+  const data = await handle<T>(res);
+  if (method !== "GET") cache.clear();
+  return data;
+}
+
+const CACHE_TTL = 10_000;
+const cache = new Map<string, { at: number; data: unknown }>();
+
+export function getCachedUser(): Record<string, unknown> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem("dermai_user");
+    return raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setCachedUser(user: Record<string, unknown> | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (user) window.localStorage.setItem("dermai_user", JSON.stringify(user));
+    else window.localStorage.removeItem("dermai_user");
+  } catch {
+    /* ignore */
+  }
 }
 
 export function assetUrl(rel: string | null | undefined): string {

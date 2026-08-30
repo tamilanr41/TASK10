@@ -14,10 +14,23 @@ type AdminUser = {
   is_active: boolean;
 };
 
+type UserForm = {
+  name: string;
+  email: string;
+  password: string;
+  confirm_password: string;
+  role: string;
+};
+
+const EMPTY: UserForm = { name: "", email: "", password: "", confirm_password: "", role: "user" };
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[] | null>(null);
   const [search, setSearch] = useState("");
   const [err, setErr] = useState("");
+  const [form, setForm] = useState<UserForm>(EMPTY);
+  const [formErr, setFormErr] = useState("");
+  const [saved, setSaved] = useState(false);
 
   const load = (q = "") => {
     api<{ users: AdminUser[] }>(`/api/admin/users${q ? `?search=${encodeURIComponent(q)}` : ""}`)
@@ -34,6 +47,25 @@ export default function AdminUsersPage() {
     load(search);
   };
 
+  const set = (k: Exclude<keyof UserForm, "role">) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm({ ...form, [k]: e.target.value });
+
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFormErr("");
+    setSaved(false);
+    try {
+      await api("/api/admin/users", { method: "POST", body: form });
+      setForm(EMPTY);
+      setSaved(true);
+      load(search);
+    } catch (ex) {
+      const f = (ex as { fields?: Record<string, string> }).fields;
+      if (f) setFormErr(Object.values(f)[0] || (ex as Error).message);
+      else setFormErr((ex as Error).message);
+    }
+  };
+
   if (err) return <div className="alert alert-danger">{err}</div>;
   if (!users) return <Spinner />;
 
@@ -44,8 +76,49 @@ export default function AdminUsersPage() {
         <input className="input" style={{ width: 260 }} placeholder="Search by name or email…" value={search} onChange={(e) => { setSearch(e.target.value); load(e.target.value); }} />
       </div>
 
-      <div className="card">
-        <table className="table">
+      <div className="grid grid-2">
+        <div className="card">
+          <h3>Add user</h3>
+          <p className="small muted mb-2">Create a new account with a specific role.</p>
+          {formErr && <div className="alert alert-danger">{formErr}</div>}
+          {saved && <div className="alert alert-success">User created successfully.</div>}
+          <form onSubmit={submit}>
+            <div className="field">
+              <label>Full name</label>
+              <input className="input" required minLength={2} value={form.name} onChange={set("name")} />
+            </div>
+            <div className="field">
+              <label>Email</label>
+              <input className="input" type="email" required value={form.email} onChange={set("email")} />
+            </div>
+            <div className="grid grid-2">
+              <div className="field">
+                <label>Role</label>
+                <select className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+                  <option value="user">User</option>
+                  <option value="doctor">Doctor</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div />
+            </div>
+            <div className="field">
+              <label>Password</label>
+              <input className="input" type="password" required minLength={8} value={form.password} onChange={set("password")} />
+            </div>
+            <div className="field">
+              <label>Confirm password</label>
+              <input className="input" type="password" required minLength={8} value={form.confirm_password} onChange={set("confirm_password")} />
+            </div>
+            <p className="small muted mb-2">Password needs 8+ characters, one uppercase letter and one number.</p>
+            <div className="flex-center">
+              <button className="btn btn-primary" type="submit">Create user</button>
+            </div>
+          </form>
+        </div>
+
+        <div className="card">
+          <table className="table">
           <thead>
             <tr>
               <th>ID</th>
@@ -82,6 +155,7 @@ export default function AdminUsersPage() {
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   );
 }

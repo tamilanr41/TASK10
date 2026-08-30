@@ -187,6 +187,7 @@ reg("get", "/api/auth/me", bind(authMe.GET));
 reg("post", "/api/admin/login", bind(adminLogin.POST));
 reg("get", "/api/admin/stats", bind(adminStats.GET));
 reg("get", "/api/admin/users", bind(adminUsers.GET));
+  reg("post", "/api/admin/users", bind(adminUsers.POST));
 reg("put", "/api/admin/users/:id/status", bind(adminUserStatus.PUT));
 
 reg("get", "/api/admin/conditions", bind(adminConditions.GET));

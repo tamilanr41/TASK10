@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { api, setAuthToken } from "@/lib/api";
+import { api, getAuthToken, setAuthToken, getCachedUser, setCachedUser } from "@/lib/api";
 
 export type AuthUser = {
   id: number;
@@ -34,30 +34,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = useCallback(async () => {
     try {
       const data = await api("/api/auth/me");
-      setUser(data.user as AuthUser);
+      const u = data.user as AuthUser;
+      setUser(u);
+      setCachedUser(u as unknown as Record<string, unknown>);
     } catch {
       setUser(null);
+      setCachedUser(null);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    if (getAuthToken()) {
+      const cached = getCachedUser();
+      if (cached) {
+        setUser(cached as unknown as AuthUser);
+        setLoading(false);
+      }
+    }
     refreshUser();
   }, [refreshUser]);
 
   const login = useCallback(async (email: string, password: string) => {
     const data = await api("/api/auth/login", { method: "POST", body: { email, password } });
     setAuthToken(data.token as string | null);
-    setUser(data.user as AuthUser);
-    return data.user as AuthUser;
+    const u = data.user as AuthUser;
+    setUser(u);
+    setCachedUser(u as unknown as Record<string, unknown>);
+    return u;
   }, []);
 
   const adminLogin = useCallback(async (email: string, password: string) => {
     const data = await api("/api/admin/login", { method: "POST", body: { email, password } });
     setAuthToken(data.token as string | null);
-    setUser(data.user as AuthUser);
-    return data.user as AuthUser;
+    const u = data.user as AuthUser;
+    setUser(u);
+    setCachedUser(u as unknown as Record<string, unknown>);
+    return u;
   }, []);
 
   const logout = useCallback(async () => {
@@ -67,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       /* ignore */
     }
     setAuthToken(null);
+    setCachedUser(null);
     setUser(null);
   }, []);
 
