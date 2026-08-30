@@ -89,7 +89,7 @@ export default function ScreeningDetailPage() {
               <div className="card center">
                 <b className="small">Scalp / hair</b>
                 {s.scalp_image_path ? (
-                  <img className="preview-img" src={assetUrl(`/uploads/${s.scalp_image_path}`)} alt="Scalp" />
+                  <img className="preview-img" src={assetUrl(`/api/uploads/${s.scalp_image_path}`)} alt="Scalp" />
                 ) : (
                   <p className="small muted">No scalp image uploaded.</p>
                 )}
@@ -99,7 +99,7 @@ export default function ScreeningDetailPage() {
               <div className="card center">
                 <b className="small">Nail</b>
                 {s.nail_image_path ? (
-                  <img className="preview-img" src={assetUrl(`/uploads/${s.nail_image_path}`)} alt="Nail" />
+                  <img className="preview-img" src={assetUrl(`/api/uploads/${s.nail_image_path}`)} alt="Nail" />
                 ) : (
                   <p className="small muted">No nail image uploaded.</p>
                 )}

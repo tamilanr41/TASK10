@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { api } from "@/lib/api";
+import { api, getAuthToken, API_BASE } from "@/lib/api";
 import { Disclosure } from "@/components/ui";
 
 const STAGES = [
@@ -307,9 +307,10 @@ export default function ScreeningPage() {
       fd.append("screening_type", area);
       if (needScalp && scalpFile) fd.append("scalp_image", scalpFile);
       if (needNail && nailFile) fd.append("nail_image", nailFile);
-      const res = await fetch("/api/screening/analyze-images", {
+      const res = await fetch(`${API_BASE}/api/screening/analyze-images`, {
         method: "POST",
         body: fd,
+        headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : undefined,
       });
       const data = (await res.json()) as AnalyzeResponse & { error?: string; code?: string };
       if (!res.ok) throw Object.assign(new Error(data.error || "Analysis failed"), { code: data.code });

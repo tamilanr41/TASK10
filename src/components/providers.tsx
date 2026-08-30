@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { api } from "@/lib/api";
+import { api, setAuthToken } from "@/lib/api";
 
 export type AuthUser = {
   id: number;
@@ -48,12 +48,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const data = await api("/api/auth/login", { method: "POST", body: { email, password } });
+    setAuthToken(data.token as string | null);
     setUser(data.user as AuthUser);
     return data.user as AuthUser;
   }, []);
 
   const adminLogin = useCallback(async (email: string, password: string) => {
     const data = await api("/api/admin/login", { method: "POST", body: { email, password } });
+    setAuthToken(data.token as string | null);
     setUser(data.user as AuthUser);
     return data.user as AuthUser;
   }, []);
@@ -64,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
+    setAuthToken(null);
     setUser(null);
   }, []);
 

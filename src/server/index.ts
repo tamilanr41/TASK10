@@ -46,6 +46,17 @@ app.disable("x-powered-by");
 app.use(express.json({ limit: "30mb" }));
 app.use(express.urlencoded({ extended: false, limit: "30mb" }));
 
+app.use((_req: ExRequest, res: ExResponse, next: () => void) => {
+  res.setHeader("Access-Control-Allow-Origin", process.env.CORS_ORIGIN || "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (_req.method === "OPTIONS") {
+    res.status(204).end();
+    return;
+  }
+  next();
+});
+
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
 
 type Handler = (req: unknown, ctx?: unknown) => Promise<unknown>;
@@ -129,7 +140,10 @@ async function sendResult(result: unknown, res: ExResponse): Promise<void> {
 type RegisterOpts = { multipart?: boolean; params?: (expr: ExRequest) => HandlerCtx };
 
 function runRoute(handler: Handler, expr: ExRequest, res: ExResponse, opts?: RegisterOpts): void {
-  const token = parseCookies(expr.headers.cookie || undefined)["dermai_token"];
+  const cookieToken = parseCookies(expr.headers.cookie || undefined)["dermai_token"];
+  const authHeader = expr.headers.authorization || "";
+  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  const token = cookieToken || bearer || undefined;
   const req = compatReq(expr);
   const ctx = opts?.params ? opts.params(expr) : { params: (expr.params || {}) as HandlerCtx };
   authContext.run({ token }, async () => {

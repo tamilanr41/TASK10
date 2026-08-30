@@ -1,0 +1,6 @@
+[build]
+  command = "npm ci && next build"
+  publish = ".next"
+
+[build.environment]
+  NEXT_PUBLIC_API_URL = "https://task10-spkk.onrender.com"

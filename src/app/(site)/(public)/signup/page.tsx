@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
+import { api, setAuthToken } from "@/lib/api";
 import { useAuth } from "@/components/providers";
 import { Spinner } from "@/components/ui";
 
 export default function SignupPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const router = useRouter();
   const [form, setForm] = useState<Record<string, string>>({
     name: "",
@@ -38,7 +38,9 @@ export default function SignupPage() {
     setErrors({});
     setBusy(true);
     try {
-      await api("/api/auth/register", { method: "POST", body: form });
+      const data = await api("/api/auth/register", { method: "POST", body: form });
+      if (data.token) setAuthToken(data.token as string);
+      await refreshUser();
       router.push("/dashboard");
     } catch (err) {
       const e = err as Error & { fields?: unknown };
