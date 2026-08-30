@@ -3174,3 +3174,107 @@ html {
   .nutri-card { border-radius: 14px; }
   .reminder-row { padding: 0.9rem 0.8rem; }
 }
+
+/* ==========================================================================
+   LANDING "ANALYSIS MODULES" — distinct instrument cards (desktop base)
+   ========================================================================== */
+.module-grid { counter-reset: mod; }
+.module-grid .feature-card {
+  counter-increment: mod;
+  border-radius: 18px;
+  border-top: 3px solid var(--mint);
+  background: linear-gradient(180deg, rgba(13, 148, 136, 0.05), rgba(13, 148, 136, 0) 70%);
+}
+.module-grid .feature-card:nth-child(6n + 2) { border-top-color: var(--sky);  background: linear-gradient(180deg, rgba(3, 105, 161, 0.06), rgba(3, 105, 161, 0) 70%); }
+.module-grid .feature-card:nth-child(6n + 3) { border-top-color: var(--violet); background: linear-gradient(180deg, rgba(124, 58, 237, 0.06), rgba(124, 58, 237, 0) 70%); }
+.module-grid .feature-card:nth-child(6n + 4) { border-top-color: var(--amber);  background: linear-gradient(180deg, rgba(217, 119, 6, 0.06), rgba(217, 119, 6, 0) 70%); }
+.module-grid .feature-card:nth-child(6n + 5) { border-top-color: var(--green);  background: linear-gradient(180deg, rgba(5, 150, 105, 0.06), rgba(5, 150, 105, 0) 70%); }
+.module-grid .feature-card:nth-child(6n)     { border-top-color: var(--rose);   background: linear-gradient(180deg, rgba(225, 29, 72, 0.06), rgba(225, 29, 72, 0) 70%); }
+.module-grid .feature-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+
+/* ==========================================================================
+   MOBILE: Analysis Modules -> stacked gradient module cards + number chip
+   Real Dermatology -> image cards with overlay caption pill
+   ========================================================================== */
+@media (max-width: 680px) {
+  .module-grid .feature-card {
+    display: block;
+    position: relative;
+    text-align: left;
+    padding: 1.15rem 1.05rem 1rem;
+    border-radius: 18px;
+    border: 1px solid rgba(13, 148, 136, 0.16);
+    border-top: 4px solid var(--mint);
+    background: linear-gradient(140deg, #f2fbf9, #ffffff);
+    box-shadow: 0 12px 26px rgba(6, 40, 40, 0.1);
+    overflow: hidden;
+  }
+  .module-grid .feature-card:nth-child(6n + 2) { border-top-color: var(--sky);   background: linear-gradient(140deg, #f2f8ff, #ffffff); }
+  .module-grid .feature-card:nth-child(6n + 3) { border-top-color: var(--violet); background: linear-gradient(140deg, #f6f2ff, #ffffff); }
+  .module-grid .feature-card:nth-child(6n + 4) { border-top-color: var(--amber);  background: linear-gradient(140deg, #fff9ef, #ffffff); }
+  .module-grid .feature-card:nth-child(6n + 5) { border-top-color: var(--green);  background: linear-gradient(140deg, #f2fcf6, #ffffff); }
+  .module-grid .feature-card:nth-child(6n)     { border-top-color: var(--rose);   background: linear-gradient(140deg, #fff3f6, #ffffff); }
+  .module-grid .feature-card::after {
+    content: counter(mod);
+    position: absolute;
+    top: 0.8rem;
+    right: 0.9rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--mint);
+    padding: 0.22rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(13, 148, 136, 0.08);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+  }
+  .module-grid .feature-card .icon-tile {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    margin: 0 0 0.8rem;
+  }
+  .module-grid .feature-card h3 {
+    margin: 0 0 0.35rem;
+    padding-right: 2.2rem;
+    font-size: 1rem;
+  }
+  .module-grid .feature-card p {
+    margin-bottom: 0;
+    font-size: 0.85rem;
+  }
+
+  /* Real Dermatology -> cards with image + overlay caption chip */
+  .derma-grid .gallery-item {
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 12px 26px rgba(6, 40, 40, 0.12);
+  }
+  .derma-grid .gallery-item-inner {
+    position: relative;
+    border: none;
+  }
+  .derma-grid .gallery-item img {
+    height: 170px;
+  }
+  .derma-grid .gallery-item figcaption {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    top: auto;
+    background: rgba(6, 20, 25, 0.72);
+    color: #eafaf5;
+    border: 1px solid rgba(34, 211, 238, 0.25);
+    border-radius: 999px;
+    padding: 0.32rem 0.8rem;
+    font-size: 0.72rem;
+    text-align: center;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+}

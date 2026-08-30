@@ -195,7 +195,7 @@ export default function HomePage() {
             Demo/prototype engine today, architected for a real CNN (MobileNetV2) tomorrow — no rebuild required.
           </p>
         </Reveal>
-        <Stagger className="feature-grid mt-2" gap={0.07}>
+        <Stagger className="feature-grid module-grid mt-2" gap={0.07}>
           {FEATURES.map((f) => (
             <Item key={f.title}>
               <Tilt className="feature-card" max={10} style={{ height: "100%" }}>
@@ -220,7 +220,7 @@ export default function HomePage() {
             DermAI works on the same areas a dermatologist examines — from dermoscopy views of lesions to hair and nail macro details.
           </p>
         </Reveal>
-        <Stagger className="gallery" gap={0.08}>
+        <Stagger className="gallery derma-grid" gap={0.08}>
           {[
             { src: "/images/mole-closeup.jpg", cap: "Dermoscopic close-up of a skin lesion" },
             { src: "/images/curly-hair-scan.jpg", cap: "Hair &amp; scalp imaging" },
