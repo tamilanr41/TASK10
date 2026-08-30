@@ -3394,3 +3394,51 @@ body {
   from { transform: translateX(40px); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+/* ------------------------------ breadcrumbs ----------------------------- */
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  width: min(1140px, 94%);
+  margin: 1.1rem auto 0;
+  font-size: 0.85rem;
+}
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.crumb-sep {
+  color: var(--ink-faint);
+}
+.crumb-link {
+  color: var(--mint-strong);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 7px;
+  padding: 0.18rem 0.32rem;
+  transition: background 0.15s;
+}
+.crumb-link:hover {
+  background: rgba(13, 148, 136, 0.1);
+}
+.crumb-here {
+  color: var(--ink);
+  font-weight: 700;
+  background: var(--bg-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  padding: 0.18rem 0.45rem;
+}
+.admin-main .breadcrumbs {
+  margin: 0 0 1rem;
+  width: 100%;
+}
+@media (max-width: 720px) {
+  .breadcrumbs {
+    font-size: 0.78rem;
+    margin-top: 0.9rem;
+  }
+}

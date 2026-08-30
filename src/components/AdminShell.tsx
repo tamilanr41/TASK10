@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers";
 import { Icon, type IconName } from "@/components/Icon";
 import { PageFade, motion } from "@/components/motion";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 const LINKS: { to: string; label: string; icon: IconName }[] = [
   { to: "/admin", label: "Dashboard", icon: "dashboard" },
@@ -77,7 +78,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </div>
       </aside>
       <main className="admin-main">
-        <PageFade>{children}</PageFade>
+        <PageFade>
+          <Breadcrumbs root={{ href: "/admin", label: "Admin" }} />
+          {children}
+        </PageFade>
       </main>
     </div>
   );
