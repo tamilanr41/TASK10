@@ -1,6 +1,6 @@
 import { PDFDocument, PDFFont, StandardFonts, rgb } from "pdf-lib";
 import path from "node:path";
-import { UPLOAD_ROOT } from "./paths";
+import { uploadRoot } from "./paths";
 import { imageToBytes } from "./images";
 
 export const PDF_DISCLAIMER =
@@ -176,7 +176,7 @@ export async function generatePdfReport(
     ["Nail image", screening.nail_image_path as string | null],
   ] as Array<[string, string | null]>) {
     if (!rel) continue;
-    const bytes = await imageToBytes(path.join(UPLOAD_ROOT, rel), 600);
+    const bytes = await imageToBytes(path.join(uploadRoot(), rel), 600);
     if (!bytes) continue;
     if (y < 200) { page = doc.addPage([PAGE_W, PAGE_H]); y = PAGE_H - MARGIN; }
     heading(doc, bold, label, y);

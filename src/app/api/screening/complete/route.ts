@@ -9,7 +9,7 @@ import { filterDoctors, suggestConsultText } from "@/lib/ai/doctorMatcher";
 import { generatePdfReport } from "@/lib/pdf";
 import fs from "node:fs";
 import path from "node:path";
-import { REPORT_DIR, MODEL_VERSION } from "@/lib/paths";
+import { reportDir, MODEL_VERSION } from "@/lib/paths";
 
 function validateOwnedPath(rel: string): boolean {
   const cleaned = rel.replace(/\\/g, "/");
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
       { name: user.name, age: user.age, sex: user.sex, email: user.email },
       screeningToDict(screening)
     );
-    fs.mkdirSync(REPORT_DIR, { recursive: true });
+    fs.mkdirSync(reportDir(), { recursive: true });
     const stamp = new Date()
       .toISOString()
       .replace(/[-:]/g, "")
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
       .replace(/T/, "");
     const reportName = `dermai_screening_${screening.id}_${stamp}.pdf`;
     const reportRel = path.join("reports", reportName).replace(/\\/g, "/");
-    fs.writeFileSync(path.join(REPORT_DIR, reportName), buf);
+    fs.writeFileSync(path.join(reportDir(), reportName), buf);
     await updateScreeningReportPath(screening.id, reportRel);
     screening.report_path = reportRel;
   } catch {

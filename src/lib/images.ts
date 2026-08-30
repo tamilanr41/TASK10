@@ -3,7 +3,7 @@ import path from "node:path";
 import fsp from "node:fs/promises";
 import fs from "node:fs";
 import Jimp from "jimp";
-import { UPLOAD_ROOT } from "./paths";
+import { uploadRoot } from "./paths";
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 export const MAX_IMAGE_SIZE_MB = 5;
@@ -95,7 +95,8 @@ export async function saveImageBuffer(
   buffer: Buffer,
   subfolder: string
 ): Promise<string> {
-  const targetDir = path.join(UPLOAD_ROOT, subfolder);
+  const root = uploadRoot();
+  const targetDir = path.join(root, subfolder);
   await fsp.mkdir(targetDir, { recursive: true });
 
   const filename = `upload_${randomBytes(8).toString("hex")}.jpg`;
@@ -104,14 +105,14 @@ export async function saveImageBuffer(
   const image = await Jimp.read(buffer);
   image.quality(90);
   await image.getBufferAsync(Jimp.MIME_JPEG).then((out) =>
-    fsp.writeFile(path.join(UPLOAD_ROOT, relative), out)
+    fsp.writeFile(path.join(root, relative), out)
   );
 
   return relative;
 }
 
 export async function imageToBytes(relativePath: string, maxSide = 600): Promise<Buffer | null> {
-  const abs = path.join(UPLOAD_ROOT, relativePath);
+  const abs = path.join(uploadRoot(), relativePath);
   try {
     if (!fs.existsSync(abs)) return null;
     const image = await Jimp.read(abs);
@@ -125,4 +126,4 @@ export async function imageToBytes(relativePath: string, maxSide = 600): Promise
   }
 }
 
-export { UPLOAD_ROOT };
+export { uploadRoot };

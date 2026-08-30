@@ -2,7 +2,7 @@ import { getUserById, getScreeningById } from "@/lib/db";
 import { jsonError, requireAuth, isError } from "@/lib/http";
 import fs from "node:fs";
 import path from "node:path";
-import { UPLOAD_ROOT } from "@/lib/paths";
+import { uploadRoot } from "@/lib/paths";
 
 type Ctx = { params: { id: string } };
 
@@ -19,7 +19,7 @@ export async function GET(_req: Request, ctx: Ctx) {
   }
   if (!screening.report_path) return jsonError("No report found for this screening.", 404);
 
-  const absPath = path.join(UPLOAD_ROOT, screening.report_path.replace(/\\/g, "/"));
+  const absPath = path.join(uploadRoot(), screening.report_path.replace(/\\/g, "/"));
   if (!fs.existsSync(absPath)) return jsonError("Report file is missing.", 404);
 
   const buf = fs.readFileSync(absPath);

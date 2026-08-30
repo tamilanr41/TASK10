@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import { UPLOAD_ROOT } from "@/lib/paths";
+import { uploadRoot } from "@/lib/paths";
 import { jsonError } from "@/lib/http";
 
 const MIME: Record<string, string> = {
@@ -22,8 +22,9 @@ export async function GET(req: NextRequest, ctx: Ctx) {
   const rel = segments.join(path.sep);
   if (rel.includes("..") || path.isAbsolute(rel)) return jsonError("Invalid path.", 400);
 
-  const abs = path.resolve(UPLOAD_ROOT, rel);
-  if (!abs.startsWith(path.resolve(UPLOAD_ROOT))) return jsonError("Invalid path.", 400);
+  const root = path.resolve(uploadRoot());
+  const abs = path.resolve(root, rel);
+  if (!abs.startsWith(root)) return jsonError("Invalid path.", 400);
   if (!fs.existsSync(abs)) return jsonError("File not found.", 404);
 
   const buf = fs.readFileSync(abs);
