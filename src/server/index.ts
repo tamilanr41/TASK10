@@ -39,7 +39,8 @@ import * as uploads from "@/app/api/uploads/[...path]/route";
 
 const dev = process.env.NODE_ENV !== "production";
 const port = Number(process.env.PORT || 3000);
-const hostname = process.env.HOSTNAME || "0.0.0.0";
+const bindHost = "0.0.0.0";
+const hostname = process.env.HOSTNAME || bindHost;
 
 const app = express();
 app.disable("x-powered-by");
@@ -241,7 +242,7 @@ app.all("/api/*", (_req: ExRequest, res: ExResponse) => {
 
 const nextApp = (nextPkg as unknown as (o: Record<string, unknown>) => ReturnType<typeof nextPkg>)({
   dev,
-  hostname,
+  hostname: bindHost,
   port,
 });
 
@@ -256,7 +257,7 @@ async function main(): Promise<void> {
       if (!res.headersSent) res.status(500).send("Internal server error");
     });
   });
-  const server = app.listen(port, hostname, () => {
+  const server = app.listen(port, bindHost, () => {
     console.log(`[dermai] server ready on http://${hostname}:${port} (dev=${dev})`);
   });
 
