@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import { Spinner, Disclosure } from "@/components/ui";
+import { Disclosure } from "@/components/ui";
+import { PageFade, motion, AnimatePresence, TypingDots } from "@/components/motion";
 
 type ChatMessage = {
   id?: number;
@@ -54,42 +55,65 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="container page">
-      <div className="flex-between mb-2">
-        <div>
-          <h1 className="page-title">DermAI Assistant</h1>
-          <p className="page-sub">Your health-oriented screening assistant</p>
+    <PageFade>
+      <div className="container page">
+        <div className="flex-between mb-2">
+          <div>
+            <h1 className="page-title">DermAI Assistant</h1>
+            <p className="page-sub">Your health-oriented screening assistant</p>
+          </div>
+          <span className="badge badge-teal">● Online</span>
         </div>
-        <span className="badge badge-teal">● Online</span>
-      </div>
 
-      <div className="chat-window">
-        <div className="chat-messages">
-          {messages.length === 0 && (
-            <div className="chat-empty">
-              <img src="/images/chat-clinic.jpg" alt="Consulting with a skin specialist" />
-              <p>
-                I&apos;m here to discuss skin, scalp, hair and nail care the way a
-                dermatology consultation would, along with nutrition, hydration,
-                screening results and when it&apos;s time to see a doctor. I give
-                educational guidance and never diagnose or prescribe.
-              </p>
-              <p>
-                Try: “What can I do for my scalp flaking?” · “my latest screening” ·
-                “when should I see a doctor?”
-              </p>
-            </div>
-          )}
+        <div className="chat-window">
+          <div className="chat-messages">
+            <AnimatePresence>
+            {messages.length === 0 && (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="chat-empty"
+              >
+                <img src="/images/chat-clinic.jpg" alt="Consulting with a skin specialist" />
+                <p>
+                  I&apos;m here to discuss skin, scalp, hair and nail care the way a
+                  dermatology consultation would, along with nutrition, hydration,
+                  screening results and when it&apos;s time to see a doctor. I give
+                  educational guidance and never diagnose or prescribe.
+                </p>
+                <p>
+                  Try: “What can I do for my scalp flaking?” · “my latest screening” ·
+                  “when should I see a doctor?”
+                </p>
+              </motion.div>
+            )}
+            </AnimatePresence>
           {messages.map((m, i) => (
-            <div key={i} className={`chat-bubble ${m.role === "user" ? "chat-user" : "chat-assistant"}`}>
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 14, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className={`chat-bubble ${m.role === "user" ? "chat-user" : "chat-assistant"}`}
+            >
               {m.content}
-            </div>
+            </motion.div>
           ))}
-          {busy && (
-            <div className="chat-bubble chat-assistant">
-              <span className="spinner" style={{ display: "inline-block", width: 14, height: 14 }} />
-            </div>
-          )}
+          <AnimatePresence>
+            {busy && (
+              <motion.div
+                key="typing"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                className="chat-bubble chat-assistant"
+              >
+                <TypingDots />
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div ref={bottomRef} />
         </div>
         <form className="chat-input-row" onSubmit={send}>
@@ -109,6 +133,7 @@ export default function ChatPage() {
       <div className="mt-3">
         <Disclosure text="This chatbot provides general wellness information only. It does not diagnose, prescribe medicines or recommend treatment for any condition. For serious or worsening symptoms, consult a qualified healthcare professional." />
       </div>
-    </div>
+      </div>
+    </PageFade>
   );
 }

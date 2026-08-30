@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/components/providers";
 import { DISCLAIMER_TEXT } from "@/lib/api";
 
+const DARK_ROUTES = ["/login", "/signup"];
+
 const NAV_LINKS = [
   { to: "/", label: "Home" },
   { to: "/about", label: "About" },
@@ -94,8 +96,10 @@ export function Navbar() {
   const isActive = (to: string) =>
     to === "/" ? pathname === "/" : pathname.startsWith(to);
 
+  const dark = DARK_ROUTES.some((r) => pathname === r);
+
   return (
-    <header className="navbar">
+    <header className={`navbar ${dark ? "dark" : ""}`}>
       <div className="navbar-inner">
         <Logo />
         <button

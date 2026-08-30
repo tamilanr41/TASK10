@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers";
 import { Icon, type IconName } from "@/components/Icon";
+import { PageFade, motion } from "@/components/motion";
 
 const LINKS: { to: string; label: string; icon: IconName }[] = [
   { to: "/admin", label: "Dashboard", icon: "dashboard" },
@@ -27,21 +28,29 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   return (
     <div className="admin-shell">
       <aside className="admin-side">
-        <Link href="/admin" className="admin-brand" aria-label="Admin dashboard">
-          <img src="/art/brand-mark.svg" alt="" width={26} height={26} />
-          DermAI Admin
-        </Link>
-        {LINKS.map((l) => {
+        <motion.div initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+          <Link href="/admin" className="admin-brand" aria-label="Admin dashboard">
+            <img src="/art/brand-mark.svg" alt="" width={26} height={26} />
+            DermAI Admin
+          </Link>
+        </motion.div>
+        {LINKS.map((l, i) => {
           const isActive = l.to === "/admin" ? pathname === "/admin" : pathname.startsWith(l.to);
           return (
-            <Link
+            <motion.div
               key={l.to}
-              href={l.to}
-              className={`admin-link ${isActive ? "active" : ""}`}
+              initial={{ opacity: 0, x: -14 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.06 * (i + 1), duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             >
-              <Icon name={l.icon} size={18} />
-              {l.label}
-            </Link>
+              <Link
+                href={l.to}
+                className={`admin-link ${isActive ? "active" : ""}`}
+              >
+                <Icon name={l.icon} size={18} />
+                {l.label}
+              </Link>
+            </motion.div>
           );
         })}
         <div className="admin-side-footer">
@@ -66,7 +75,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           </button>
         </div>
       </aside>
-      <main className="admin-main">{children}</main>
+      <main className="admin-main">
+        <PageFade>{children}</PageFade>
+      </main>
     </div>
   );
 }

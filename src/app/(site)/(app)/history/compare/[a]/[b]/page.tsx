@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { Spinner, SeverityBadge, BackLink } from "@/components/ui";
+import { PageFade, Reveal } from "@/components/motion";
 import type { Screening } from "@/components/ScreeningView";
 
 type CompareData = {
@@ -62,40 +63,46 @@ export default function ComparePage() {
   ];
 
   return (
-    <div className="container page">
-      <BackLink to="/history" label="Back to History" />
-      <h1 className="page-title mt-2">Follow-up comparison</h1>
-      <p className="page-sub">Previous vs current screening</p>
+    <PageFade>
+      <div className="container page">
+        <BackLink to="/history" label="Back to History" />
+        <h1 className="page-title mt-2">Follow-up comparison</h1>
+        <p className="page-sub">Previous vs current screening</p>
 
-      <div className="alert alert-info mb-3">
-        {data.note}
-      </div>
+        <Reveal>
+          <div className="alert alert-info mb-3">
+            {data.note}
+          </div>
+        </Reveal>
 
-      <div className="card">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Aspect</th>
-              <th>Previous</th>
-              <th>Current</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(([label, left, right]) => (
-              <tr key={label}>
-                <td><b>{label}</b></td>
-                <td>{left}</td>
-                <td>{right}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        <Reveal>
+          <div className="card table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Aspect</th>
+                  <th>Previous</th>
+                  <th>Current</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map(([label, left, right]) => (
+                  <tr key={label}>
+                    <td><b>{label}</b></td>
+                    <td>{left}</td>
+                    <td>{right}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Reveal>
 
-      <div className="compare-grid mt-3">
-        <Side title="Previous screening" item={data.previous} />
-        <Side title="Current screening" item={data.current} />
+        <div className="compare-grid mt-3">
+          <Reveal><Side title="Previous screening" item={data.previous} /></Reveal>
+          <Reveal delay={0.12}><Side title="Current screening" item={data.current} /></Reveal>
+        </div>
       </div>
-    </div>
+    </PageFade>
   );
 }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "reac
 import { useRouter, useSearchParams } from "next/navigation";
 import { api, getAuthToken, API_BASE } from "@/lib/api";
 import { Disclosure } from "@/components/ui";
+import { motion, AnimatePresence, PageFade } from "@/components/motion";
 
 const STAGES = [
   { key: "general", label: "General" },
@@ -73,12 +74,18 @@ function StepIndicator({ current }: { current: number }) {
         const n = i + 1;
         const cls = n === current ? "active" : n < current ? "done" : "";
         return (
-          <span key={s.label} className="flex-center">
+          <motion.span
+            key={s.label}
+            className="flex-center"
+            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, y: 8 }}
+            transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
             <span className={`step-chip ${cls}`}>
               {n}. {s.label}
             </span>
             {n < steps.length && <span className="step-arrow">→</span>}
-          </span>
+          </motion.span>
         );
       })}
     </div>
@@ -409,95 +416,145 @@ export default function ScreeningPage() {
   };
 
   return (
-    <div className="container page">
-      <h1 className="page-title">New Screening</h1>
-      <p className="page-sub">Guided AI-assisted preliminary assessment</p>
-      <StepIndicator current={step} />
+    <PageFade>
+      <div className="container page">
+        <h1 className="page-title">New Screening</h1>
+        <p className="page-sub">Guided AI-assisted preliminary assessment</p>
+        <StepIndicator current={step} />
 
-      {step === 1 && (
-        <div className="card">
-          <h3>Select the screening area</h3>
-          <p className="small muted mb-3">
-            Some people have symptoms in both scalp/hair and nails — the combined
-            option handles those together.
-          </p>
-          <div className="grid grid-3">
-            {[
-              { v: "scalp", t: "Scalp / Hair", d: "Dandruff, dry scalp, irritation, hair fall, thinning…", art: "/images/scalp-area.jpg" },
-              { v: "nails", t: "Nails", d: "Brittleness, discoloration, fungal possibility…", art: "/images/nails-area.jpg" },
-              { v: "combined", t: "Scalp / Hair + Nails", d: "Both areas in one multimodal screening", art: "/images/skin-texture.jpg" },
-            ].map((o) => (
-              <div
-                key={o.v}
-                className="feature-card card-hover"
-                style={{ cursor: "pointer", borderColor: area === o.v ? "var(--mint-strong)" : undefined }}
-                onClick={() => pickArea(o.v)}
-              >
-                <img src={o.art} alt={o.t} className="area-art" />
-                <h3>{o.t}</h3>
-                <p className="small">{o.d}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex" style={{ justifyContent: "flex-end" }}>
-            <button className="btn btn-primary" disabled={!area} onClick={() => setStep(2)}>
-              Continue →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="card">
-          <div className="flex-between mb-2">
-            <h3>Upload images</h3>
-            <button className="btn btn-ghost btn-sm" onClick={() => setStep(1)}>← Change area</button>
-          </div>
-          <div className="grid grid-2">
-            {needScalp && (
-              <div>
-                <h4>Scalp / Hair image</h4>
-                <UploadBox label="Scalp" hint="Scalp / hair image" file={scalpFile} dataUrl={scalpUrl} error={scalpErr} onFile={onScalp} />
-                {scalpFile && (
-                  <div className="mt-1 flex-center">
-                    <button className="btn btn-outline btn-sm" onClick={removeScalp}>Remove image</button>
-                  </div>
-                )}
-              </div>
-            )}
-            {needNail && (
-              <div>
-                <h4>Nail image</h4>
-                <UploadBox label="Nail" hint="Nail image" file={nailFile} dataUrl={nailUrl} error={nailErr} onFile={onNail} />
-                {nailFile && (
-                  <div className="mt-1 flex-center">
-                    <button className="btn btn-outline btn-sm" onClick={removeNail}>Remove image</button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          <div className="question-actions">
-            <span className="small muted">JPG · JPEG · PNG · max 5 MB</span>
-            <div className="flex-center">
-              <button className="btn btn-outline" onClick={() => setStep(1)}>Back</button>
-              <button className="btn btn-primary" disabled={!imagesReady} onClick={() => setStep(3)}>
-                Analyze images →
+        <AnimatePresence mode="wait">
+        {step === 1 && (
+          <motion.div
+            key="step1"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -14 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          >
+          <div className="card">
+            <h3>Select the screening area</h3>
+            <p className="small muted mb-3">
+              Some people have symptoms in both scalp/hair and nails — the combined
+              option handles those together.
+            </p>
+            <div className="grid grid-3">
+              {[
+                { v: "scalp", t: "Scalp / Hair", d: "Dandruff, dry scalp, irritation, hair fall, thinning…", art: "/images/scalp-area.jpg" },
+                { v: "nails", t: "Nails", d: "Brittleness, discoloration, fungal possibility…", art: "/images/nails-area.jpg" },
+                { v: "combined", t: "Scalp / Hair + Nails", d: "Both areas in one multimodal screening", art: "/images/skin-texture.jpg" },
+              ].map((o, i) => (
+                <motion.div
+                  key={o.v}
+                  className="feature-card card-hover"
+                  style={{ cursor: "pointer", borderColor: area === o.v ? "var(--mint-strong)" : undefined }}
+                  onClick={() => pickArea(o.v)}
+                  whileHover={{ y: -6 }}
+                  initial={{ opacity: 0, y: 22 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.09, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <img src={o.art} alt={o.t} className="area-art" />
+                  <h3>{o.t}</h3>
+                  <p className="small">{o.d}</p>
+                </motion.div>
+              ))}
+            </div>
+            <div className="mt-3 flex" style={{ justifyContent: "flex-end" }}>
+              <button className="btn btn-primary" disabled={!area} onClick={() => setStep(2)}>
+                Continue →
               </button>
             </div>
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
 
-      {step === 3 && (
-        <div className="card mb-3">
-          <h3>Run initial AI image analysis</h3>
-          <p className="small muted mb-3">
-            The engine validates and preprocesses your image, then produces an
-            initial image-only result. It will be combined with your answers next.
-          </p>
-          {analysisErr && <div className="alert alert-danger mb-2">{analysisErr}</div>}
-          {analysis && (
+        {step === 2 && (
+          <motion.div
+            key="step2"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -14 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          >
+          <div className="card">
+            <div className="flex-between mb-2">
+              <h3>Upload images</h3>
+              <button className="btn btn-ghost btn-sm" onClick={() => setStep(1)}>← Change area</button>
+            </div>
+            <div className="grid grid-2">
+              {needScalp && (
+                <div>
+                  <h4>Scalp / Hair image</h4>
+                  <UploadBox label="Scalp" hint="Scalp / hair image" file={scalpFile} dataUrl={scalpUrl} error={scalpErr} onFile={onScalp} />
+                  {scalpFile && (
+                    <div className="mt-1 flex-center">
+                      <button className="btn btn-outline btn-sm" onClick={removeScalp}>Remove image</button>
+                    </div>
+                  )}
+                </div>
+              )}
+              {needNail && (
+                <div>
+                  <h4>Nail image</h4>
+                  <UploadBox label="Nail" hint="Nail image" file={nailFile} dataUrl={nailUrl} error={nailErr} onFile={onNail} />
+                  {nailFile && (
+                    <div className="mt-1 flex-center">
+                      <button className="btn btn-outline btn-sm" onClick={removeNail}>Remove image</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="question-actions">
+              <span className="small muted">JPG · JPEG · PNG · max 5 MB</span>
+              <div className="flex-center">
+                <button className="btn btn-outline" onClick={() => setStep(1)}>Back</button>
+                <button className="btn btn-primary" disabled={!imagesReady} onClick={() => setStep(3)}>
+                  Analyze images →
+                </button>
+              </div>
+            </div>
+          </div>
+          </motion.div>
+        )}
+
+        {step === 3 && (
+          <motion.div
+            key="step3"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -14 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          >
+          <div className="card mb-3">
+            <h3>Run initial AI image analysis</h3>
+            <p className="small muted mb-3">
+              The engine validates and preprocesses your image, then produces an
+              initial image-only result. It will be combined with your answers next.
+            </p>
+            {analysisErr && <div className="alert alert-danger mb-2">{analysisErr}</div>}
+
+            <AnimatePresence>
+            {analyzing && (
+              <motion.div
+                key="scanner"
+                className="scanner"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className="scanner-box">
+                  <div className="scanner-beam" />
+                  <div className="scanner-text">
+                    <span className="dot-live" style={{ color: "#34d399" }}>●</span>{" "}
+                    Analyzing images… running image-only model
+                  </div>
+                </div>
+              </motion.div>
+            )}
+            </AnimatePresence>
+
+            {analysis && (
             <div className="mb-3">
               <div className="demo-banner">
                 DEMO / PROTOTYPE AI RESULT — image analysis is generated by the
@@ -543,9 +600,17 @@ export default function ScreeningPage() {
             )}
           </div>
         </div>
+        </motion.div>
       )}
 
       {step === 4 && (
+        <motion.div
+          key="step4"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -14 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        >
         <div>
           <div className="tabs">
             {STAGES.map((s, i) => (
@@ -628,7 +693,10 @@ export default function ScreeningPage() {
           {analysisErr && !stageErr && <div className="alert alert-danger mb-2">{analysisErr}</div>}
           <Disclosure />
         </div>
+        </motion.div>
       )}
-    </div>
+      </AnimatePresence>
+      </div>
+    </PageFade>
   );
 }
