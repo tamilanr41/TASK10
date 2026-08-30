@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { Spinner, StatCard, SeverityBadge } from "@/components/ui";
+import { Icon, type IconName } from "@/components/Icon";
 
 type AdminStats = {
   total_users: number;
@@ -39,10 +41,50 @@ export default function AdminDashboardPage() {
   const total = stats.total_screenings || 0;
   const sev: Record<string, number> = stats.severity_distribution || {};
 
+  const MODULES: { to: string; label: string; desc: string; icon: IconName; tone: string }[] = [
+    { to: "/admin/users", label: "Users", desc: "Add accounts, set roles, enable or disable access.", icon: "users", tone: "teal" },
+    { to: "/admin/doctors", label: "Doctors", desc: "Add, edit or remove dermatology providers.", icon: "hospital", tone: "sky" },
+    { to: "/admin/conditions", label: "Conditions", desc: "Manage screening conditions and their labels.", icon: "folder", tone: "violet" },
+    { to: "/admin/nutrition", label: "Nutrition", desc: "Curate nutritional and hydration guidance.", icon: "nutrition", tone: "amber" },
+    { to: "/admin/recommendations", label: "Recommendations", desc: "Tailored when-to-consult guidance.", icon: "quiz", tone: "rose" },
+    { to: "/admin", label: "Overview stats", desc: "Usage, severity and activity analytics.", icon: "dashboard", tone: "green" },
+  ];
+
   return (
     <div>
-      <h1 className="page-title">Admin Dashboard</h1>
-      <p className="page-sub">Screening statistics and recent activity</p>
+      <div className="dash-hero mb-3">
+        <div className="dash-hero-inner">
+          <div>
+            <span className="glass-chip">
+              <span className="dot-live" style={{ color: "#34d399" }}>●</span> ADMIN ROLE · FULL ACCESS
+            </span>
+            <h1 className="dash-hero-title" style={{ marginTop: "1.1rem" }}>Admin Control Center</h1>
+            <p className="dash-hero-sub">
+              Everything an administrator can do — users, doctors, conditions, nutrition and
+              recommendations — from one professional console.
+            </p>
+          </div>
+          <div className="admin-dash-badge" aria-hidden="true">
+            <Icon name="users" size={52} />
+          </div>
+        </div>
+      </div>
+
+      <h2 className="section-title">Access &amp; modules</h2>
+      <div className="feature-grid mb-3">
+        {MODULES.map((m) => (
+          <Link key={m.label} href={m.to} className="feature-card feature-card-link" style={{ textDecoration: "none", color: "inherit" }}>
+            <div className={`icon-tile feature-icon-${m.tone}`}>
+              <Icon name={m.icon} size={24} />
+            </div>
+            <h3 style={{ marginTop: "0.8rem" }}>{m.label}</h3>
+            <p className="small muted" style={{ marginTop: "0.35rem" }}>{m.desc}</p>
+          </Link>
+        ))}
+      </div>
+
+      <h1 className="page-title mt-3">Screening statistics</h1>
+      <p className="page-sub">Usage analytics and recent activity across DermAI</p>
 
       <div className="stat-grid mb-3">
         <StatCard label="Total users" value={stats.total_users} />

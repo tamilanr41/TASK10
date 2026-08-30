@@ -337,6 +337,18 @@ code {
   }
   .nav-link {
     border-radius: 10px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.95rem;
+    justify-content: flex-start;
+  }
+  .nav-links .nav-cta {
+    justify-content: center;
+    margin-top: 0.35rem;
+    font-size: 1rem;
+    padding: 0.72rem 0.9rem;
+  }
+  .nav-links .nav-link:not(.nav-cta) + .nav-link:not(.nav-cta) {
+    border-top: 1px solid var(--line-soft);
   }
   .user-menu {
     position: static;
@@ -1856,7 +1868,7 @@ a.feature-card:focus {
   .auth-wrap {
     grid-template-columns: 1fr;
   }
-  .auth-art {
+  .auth-wrap > .auth-art:last-child {
     display: none;
   }
 }
@@ -3318,4 +3330,24 @@ html {
 html,
 body {
   overflow-x: hidden;
+}
+
+/* admin control-center hero badge */
+.admin-dash-badge {
+  margin-left: auto;
+  width: 130px;
+  height: 130px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  color: #5eead4;
+  background: radial-gradient(60% 60% at 50% 35%, rgba(13, 148, 136, 0.35), rgba(13, 148, 136, 0.05));
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  box-shadow: 0 24px 60px rgba(2, 8, 18, 0.5);
+}
+@media (max-width: 720px) {
+  .admin-dash-badge {
+    display: none;
+  }
 }

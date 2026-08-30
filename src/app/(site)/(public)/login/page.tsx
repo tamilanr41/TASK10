@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [shake, setShake] = useState(0);
 
   useEffect(() => {
-    if (!loading && user) router.replace("/dashboard");
+    if (!loading && user) router.replace(user.role === "admin" ? "/admin" : "/dashboard");
   }, [loading, user, router]);
 
   if (loading || user) return <Spinner />;
@@ -28,8 +28,8 @@ export default function LoginPage() {
     setError("");
     setBusy(true);
     try {
-      await login(email, password);
-      router.push("/dashboard");
+      const u = await login(email, password);
+      router.push(u?.role === "admin" ? "/admin" : "/dashboard");
     } catch (err) {
       setError((err as Error).message);
       setShake((n) => n + 1);
