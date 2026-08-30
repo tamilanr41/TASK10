@@ -60,29 +60,53 @@ export async function POST(req: NextRequest) {
 
   const predictions: Record<string, unknown> = {};
   const paths: Record<string, string> = {};
+  const storageWarnings: string[] = [];
 
   if (needScalp && scalpInfo && scalpFile instanceof File) {
     const buf = Buffer.from(await scalpFile.arrayBuffer());
-    const rel = await saveImageBuffer(buf, "scalp");
-    paths.scalp_image_path = rel;
+    let rel: string | null = null;
+    try {
+      rel = await saveImageBuffer(buf, "scalp");
+      paths.scalp_image_path = rel;
+    } catch (e) {
+      console.error("[analyze] scalp image save failed", e);
+      storageWarnings.push(`Scalp image could not be stored on the server (${(e as Error).message}).`);
+    }
     const pred = predictDemo(buf, Number(scalpInfo.width), Number(scalpInfo.height), "scalp");
-    pred.image_path = rel;
-    pred.server_url = `/api/uploads/${rel}`;
+    if (rel) {
+      pred.image_path = rel;
+      pred.server_url = `/api/uploads/${rel}`;
+    } else {
+      pred.image_path = null;
+      pred.server_url = null;
+    }
     predictions.scalp = pred;
   }
 
   if (needNail && nailInfo && nailFile instanceof File) {
     const buf = Buffer.from(await nailFile.arrayBuffer());
-    const rel = await saveImageBuffer(buf, "nails");
-    paths.nail_image_path = rel;
+    let rel: string | null = null;
+    try {
+      rel = await saveImageBuffer(buf, "nails");
+      paths.nail_image_path = rel;
+    } catch (e) {
+      console.error("[analyze] nail image save failed", e);
+      storageWarnings.push(`Nail image could not be stored on the server (${(e as Error).message}).`);
+    }
     const pred = predictDemo(buf, Number(nailInfo.width), Number(nailInfo.height), "nails");
-    pred.image_path = rel;
-    pred.server_url = `/api/uploads/${rel}`;
+    if (rel) {
+      pred.image_path = rel;
+      pred.server_url = `/api/uploads/${rel}`;
+    } else {
+      pred.image_path = null;
+      pred.server_url = null;
+    }
     predictions.nails = pred;
   }
 
   result.predictions = predictions;
   result.paths = paths;
+  if (storageWarnings.length) result.storage_warnings = storageWarnings;
   result.note =
     `Image analysis completed using the ${MODE_LABEL} engine. Individual image ` +
     "results are preliminary and will be combined with your symptom answers " +
