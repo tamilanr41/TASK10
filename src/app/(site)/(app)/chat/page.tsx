@@ -76,7 +76,7 @@ export default function ChatPage() {
                 exit={{ opacity: 0 }}
                 className="chat-empty"
               >
-                <img src="/images/chat-clinic.jpg" alt="Consulting with a skin specialist" />
+                <img src="/images/chat-clinic.jpg" alt="Consulting a hair and nail specialist" />
                 <p>
                   I&apos;m here to discuss skin, scalp, hair and nail care the way a
                   dermatology consultation would, along with nutrition, hydration,

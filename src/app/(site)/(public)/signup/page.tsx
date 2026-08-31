@@ -134,7 +134,7 @@ export default function SignupPage() {
           >
             <div className="hero-2-visual" style={{ width: "100%", aspectRatio: "4 / 4.6" }}>
               <div className="hero-2-visual-ring" />
-              <img src="/images/auth-skin-check.jpg" alt="Skin check at the clinic" />
+              <img src="/images/dermoscope-exam.jpg" alt="Scalp, hair and nail assessment" />
               <motion.span
                 className="hero-2-chip"
                 style={{ bottom: "8%", left: "-6%" }}

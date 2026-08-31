@@ -59,7 +59,7 @@ export default function DoctorsPage() {
 
         <Reveal>
           <div className="cutout-blob mb-3" style={{ maxWidth: 560, aspectRatio: "16 / 9" }}>
-            <img src="/images/clinic-consult.jpg" alt="Dermatology clinic consultation" style={{ height: "100%" }} />
+            <img src="/images/clinic-consult.jpg" alt="Hair and nail clinic consultation" style={{ height: "100%" }} />
           </div>
         </Reveal>
 

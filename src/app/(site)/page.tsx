@@ -10,7 +10,7 @@ import { Orbs, Reveal, Stagger, Item, CountUp, Tilt, Parallax, Magnetic, motion 
 const HERO_SLIDES = [
   { src: "/images/hero-scalp-exam.jpg", label: "scalp · live", conf: "94.2%" },
   { src: "/images/exam-advanced-tech.jpg", label: "analysis · running", conf: "91.7%" },
-  { src: "/images/skin-exam-tablet.jpg", label: "review · reading", conf: "96.1%" },
+  { src: "/images/dermoscope-exam.jpg", label: "review · reading", conf: "96.1%" },
   { src: "/images/clinic-consult.jpg", label: "consult · clinic", conf: "89.4%" },
 ];
 
@@ -213,21 +213,21 @@ export default function HomePage() {
 
         <Reveal>
           <div className="center mb-1">
-            <span className="kicker">Real Dermatology</span>
+            <span className="kicker">Scalp · Hair · Nails</span>
           </div>
-          <h2 className="center">A closer look at skin, scalp &amp; nails</h2>
+          <h2 className="center">A closer look at scalp, hair &amp; nails</h2>
           <p className="center muted mb-3" style={{ maxWidth: 640, margin: "0 auto 1.5rem" }}>
-            DermAI works on the same areas a dermatologist examines — from dermoscopy views of lesions to hair and nail macro details.
+            DermAI works on the same areas a doctor examines — from scalp and hair close-ups to nail macro detail.
           </p>
         </Reveal>
         <Stagger className="gallery derma-grid" gap={0.08}>
           {[
-            { src: "/images/mole-closeup.jpg", cap: "Dermoscopic close-up of a skin lesion" },
+            { src: "/images/dermoscope-exam.jpg", cap: "Close-up scalp imaging" },
             { src: "/images/curly-hair-scan.jpg", cap: "Hair &amp; scalp imaging" },
             { src: "/images/red-nails-leaf.jpg", cap: "Nail macro &amp; condition detail" },
-            { src: "/images/back-moles.jpg", cap: "Full-skin lesion screening" },
-            { src: "/images/laser-skin-treatment.jpg", cap: "In-clinic skin treatment" },
-            { src: "/images/scientist-microscope.jpg", cap: "Microscopy &amp; lab analysis" },
+            { src: "/images/scalp-area.jpg", cap: "Scalp &amp; hair screening" },
+            { src: "/images/hair-scan-device.jpg", cap: "Handheld scalp scan" },
+            { src: "/images/clinic-consult.jpg", cap: "In-clinic hair &amp; nail consultation" },
           ].map((g, i) => (
             <Item key={g.src}>
               <Parallax speed={(i % 2 === 0 ? 1 : -1) * 0.08} className="gallery-item" style={{ height: "100%" }}>

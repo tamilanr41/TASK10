@@ -75,7 +75,7 @@ export default function DashboardPage() {
                 </p>
                 <Link href="/screening" className="btn btn-primary btn-dark-glow mt-2">Start New Screening</Link>
               </div>
-              <img className="dash-hero-img" src="/images/clinic-consult.jpg" alt="Dermatology consultation" />
+              <img className="dash-hero-img" src="/images/clinic-consult.jpg" alt="Hair and nail consultation" />
             </div>
           </div>
         </Reveal>

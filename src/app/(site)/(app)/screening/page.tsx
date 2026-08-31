@@ -441,7 +441,7 @@ export default function ScreeningPage() {
               {[
                 { v: "scalp", t: "Scalp / Hair", d: "Dandruff, dry scalp, irritation, hair fall, thinning…", art: "/images/scalp-area.jpg" },
                 { v: "nails", t: "Nails", d: "Brittleness, discoloration, fungal possibility…", art: "/images/nails-area.jpg" },
-                { v: "combined", t: "Scalp / Hair + Nails", d: "Both areas in one multimodal screening", art: "/images/skin-texture.jpg" },
+                { v: "combined", t: "Scalp / Hair + Nails", d: "Both areas in one multimodal screening", art: "/images/clinic-consult.jpg" },
               ].map((o, i) => (
                 <motion.div
                   key={o.v}
