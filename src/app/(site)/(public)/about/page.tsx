@@ -9,7 +9,7 @@ export default function AboutPage() {
       <Kicker>About the system</Kicker>
       <h1 className="page-title mt-2">About DermAI</h1>
       <p className="page-sub">
-        AI-Assisted Multimodal Screening Platform
+        AI-Assisted Multimodal Screening Platform for Scalp, Hair and Nails
       </p>
 
       <Reveal>
@@ -17,16 +17,17 @@ export default function AboutPage() {
         <div className="card">
           <h3>What is DermAI?</h3>
           <p className="small">
-            DermAI is an AI-assisted multimodal screening platform. It combines
-            image-based analysis with a structured dynamic questionnaire and a
-            fusion engine to produce clear, preliminary screening summaries for
-            educational and demonstration purposes.
+            DermAI is an AI-assisted multimodal screening platform focused on
+            scalp, hair and nail health. It combines image-based analysis with
+            a structured dynamic questionnaire and a fusion engine to produce
+            clear, preliminary screening summaries for educational and
+            demonstration purposes.
           </p>
           <h3 className="mt-2">Core capabilities</h3>
           <ul className="small">
-            <li>Image upload, validation and preprocessing</li>
+            <li>Upload and validation of scalp/hair and nail images</li>
             <li>Initial AI-based image analysis</li>
-            <li>Adaptive symptom questionnaire</li>
+            <li>Adaptive symptom questionnaire for hair and nails</li>
             <li>Multimodal fusion of image, symptoms and context</li>
             <li>Generated reports and result history</li>
           </ul>
@@ -35,10 +36,10 @@ export default function AboutPage() {
         <div className="card">
           <h3>How the screening works</h3>
           <ol className="small">
-            <li>You select a screening area.</li>
-            <li>You upload valid images – validated for type, size and readability.</li>
+            <li>You select a screening area – scalp/hair, nails, or combined.</li>
+            <li>You upload valid images, validated for type, size and readability.</li>
             <li>The AI engine produces an initial image analysis.</li>
-            <li>A dynamic questionnaire asks only relevant questions.</li>
+            <li>A dynamic questionnaire asks only relevant hair and nail questions.</li>
             <li>A multimodal engine fuses image + symptom + context into one result.</li>
             <li>You receive possible findings, confidence, severity, nutrition
                 considerations, general recommendations and guidance.</li>
@@ -52,7 +53,7 @@ export default function AboutPage() {
       <div className="card mt-3">
         <h3>System architecture</h3>
         <p className="small muted" style={{ fontFamily: "var(--mono)" }}>
-          Image → Preprocessing → Model → Image prediction
+          Image → Preprocessing → Model → Image prediction (scalp/hair · nails)
         </p>
         <p className="small muted" style={{ fontFamily: "var(--mono)" }}>
           Symptom answers → Feature extraction
