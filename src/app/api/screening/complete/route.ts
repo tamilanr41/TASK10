@@ -119,7 +119,8 @@ export async function POST(req: NextRequest) {
     fs.writeFileSync(path.join(reportDir(), reportName), buf);
     await updateScreeningReportPath(screening.id, reportRel);
     screening.report_path = reportRel;
-  } catch {
+  } catch (e) {
+    console.error("[complete] pdf generation failed", e);
     // PDF generation is best-effort.
   }
 
