@@ -78,8 +78,8 @@ export default function ChatPage() {
               >
                 <img src="/images/chat-clinic.jpg" alt="Consulting a hair and nail specialist" />
                 <p>
-                  I&apos;m here to discuss skin, scalp, hair and nail care the way a
-                  dermatology consultation would, along with nutrition, hydration,
+                  I&apos;m here to discuss scalp, hair and nail care the way a
+                  clinic consultation would, along with nutrition, hydration,
                   screening results and when it&apos;s time to see a doctor. I give
                   educational guidance and never diagnose or prescribe.
                 </p>

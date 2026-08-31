@@ -32,7 +32,7 @@ function Hero() {
             <Reveal delay={0.1}>
               <h1 style={{ marginTop: "1.1rem" }}>
                 Every screen, a <br className="brk" />
-                <span className="dark-grad-text">new window</span> into your skin
+                <span className="dark-grad-text">new window</span> into scalp, hair &amp; nail health
               </h1>
             </Reveal>
             <Reveal delay={0.18}>
